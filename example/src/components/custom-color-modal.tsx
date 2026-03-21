@@ -5,6 +5,7 @@ import {
   Text,
   Pressable,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -18,6 +19,7 @@ import { Colors, BorderRadius, Spacing } from '../design-tokens';
 import { TimingPresets } from '../animations';
 
 export const CustomColorModal = () => {
+  const { height: windowHeight } = useWindowDimensions();
   const visible = useSelector(qrcodeState$.isCustomColorModalVisible);
   const customColors = useSelector(qrcodeState$.customColors);
   const pageTheme = useSelector(qrcodeState$.pageTheme);
@@ -54,6 +56,8 @@ export const CustomColorModal = () => {
   const translateY = useSharedValue(0);
   const startX = useSharedValue(0);
   const startY = useSharedValue(0);
+  const baseOffsetY =
+    Platform.OS === 'web' ? Math.min(windowHeight * 0.18, 180) : 80;
 
   useEffect(() => {
     if (visible) {
@@ -102,7 +106,7 @@ export const CustomColorModal = () => {
     opacity: animation.value,
     transform: [
       { translateX: translateX.value },
-      { translateY: translateY.value },
+      { translateY: baseOffsetY + translateY.value },
       { scale: 0.95 + animation.value * 0.05 },
     ],
   }));

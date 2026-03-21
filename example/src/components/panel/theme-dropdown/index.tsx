@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -14,6 +14,7 @@ import { TimingPresets } from '../../../animations';
 import { ThemeOption } from './theme-option';
 import { styles } from './styles';
 import { usePanelTheme } from '../panel-theme';
+import { notifyDropdownOpened, subscribeToDropdownOpen } from '../hover-dropdown/context';
 
 const formatThemeName = (name: ThemeName) => {
   if (name === 'mono') return 'Black';
@@ -23,6 +24,7 @@ const formatThemeName = (name: ThemeName) => {
 };
 
 export const ThemeDropdown = () => {
+  const idRef = useRef(`dropdown-${Math.random().toString(36).slice(2)}`);
   const currentThemeName = useSelector(qrcodeState$.currentTheme);
   const customColorsRaw = useSelector(qrcodeState$.customColors) as Array<
     string | undefined
@@ -77,6 +79,7 @@ export const ThemeDropdown = () => {
       return;
     }
 
+    notifyDropdownOpened(idRef.current);
     setIsTapOpen(true);
     openDropdown();
   };
@@ -106,6 +109,15 @@ export const ThemeDropdown = () => {
     closeDropdown();
   };
 
+  useEffect(() => {
+    return subscribeToDropdownOpen((openedId) => {
+      if (openedId !== idRef.current) {
+        setIsTapOpen(false);
+        closeDropdown();
+      }
+    });
+  }, []);
+
   const dropdownStyle = useAnimatedStyle(() => ({
     opacity: animation.value,
     transform: [
@@ -133,6 +145,9 @@ export const ThemeDropdown = () => {
               backgroundColor: theme.dropdownBackground,
               borderColor: theme.borderDropdown,
               shadowColor: theme.shadowColor,
+              boxShadow: theme.isDark
+                ? '0 22px 48px rgba(0,0,0,0.32)'
+                : '0 22px 48px rgba(60, 40, 20, 0.14)',
             },
           ]}
         >

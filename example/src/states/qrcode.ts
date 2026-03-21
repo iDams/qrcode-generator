@@ -44,7 +44,7 @@ export const qrcodeState$ = observable<{
   gap: 'sm',
   selectedGradient: 'linear',
   currentTheme: 'Imarco',
-  pageTheme: 'light',
+  pageTheme: 'dark',
   selectedLogo: { type: 'custom', value: '' },
   customLogoUri: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNCQzAwMkQiIHJ4PSIxMCIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iNTUlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iJ05vdG8gU2FucyBKUCcsICdNZWlyeW8nLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjY1IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI0ZGRkZGRiI+CiAgICDjg57jg6vjgrMKICA8L3RleHQ+Cjwvc3ZnPgo=',
   copyTrigger: 0,

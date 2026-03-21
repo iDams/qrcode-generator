@@ -44,10 +44,10 @@ export const styles = StyleSheet.create({
     zIndex: 9999,
   },
   dropdownUp: {
-    bottom: '100%',
+    bottom: Sizes.button - 4,
   },
   dropdownDown: {
-    top: '100%',
+    top: Sizes.button - 4,
   },
   dropdownContent: {
     backgroundColor: Colors.dropdownBackground,

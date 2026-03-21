@@ -53,7 +53,7 @@ export const styles = StyleSheet.create({
   },
   dropdown: {
     position: 'absolute',
-    bottom: '100%',
+    bottom: Sizes.button - 4,
     left: 0,
     zIndex: 9999,
   },

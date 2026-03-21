@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import Animated, {
@@ -8,7 +8,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ChevronIcon } from '../../icons';
 import { TimingPresets } from '../../../animations';
-import { DropdownCloseContext, DropdownDirectionContext } from './context';
+import {
+  DropdownCloseContext,
+  DropdownDirectionContext,
+  notifyDropdownOpened,
+  subscribeToDropdownOpen,
+} from './context';
 import { styles } from './styles';
 import { usePanelTheme } from '../panel-theme';
 
@@ -25,6 +30,7 @@ export const HoverDropdown = ({
   children,
   label,
 }: HoverDropdownProps) => {
+  const idRef = useRef(`dropdown-${Math.random().toString(36).slice(2)}`);
   const direction = useContext(DropdownDirectionContext);
   const theme = usePanelTheme();
   const [isHovered, setIsHovered] = useState(false);
@@ -46,6 +52,7 @@ export const HoverDropdown = ({
       setIsTapOpen(false);
       closeDropdown();
     } else {
+      notifyDropdownOpened(idRef.current);
       setIsTapOpen(true);
       openDropdown();
     }
@@ -59,6 +66,15 @@ export const HoverDropdown = ({
   const closeFromChild = useCallback(() => {
     setIsTapOpen(false);
     closeDropdown();
+  }, [closeDropdown]);
+
+  useEffect(() => {
+    return subscribeToDropdownOpen((openedId) => {
+      if (openedId !== idRef.current) {
+        setIsTapOpen(false);
+        closeDropdown();
+      }
+    });
   }, [closeDropdown]);
 
   const dropdownStyle = useAnimatedStyle(() => {
@@ -99,6 +115,9 @@ export const HoverDropdown = ({
             {
               backgroundColor: theme.dropdownBackground,
               borderColor: theme.borderDropdown,
+              boxShadow: theme.isDark
+                ? '0 22px 48px rgba(0,0,0,0.32)'
+                : '0 22px 48px rgba(60, 40, 20, 0.14)',
             },
           ]}
         >

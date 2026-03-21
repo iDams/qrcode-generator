@@ -63,16 +63,16 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
 const responsiveBackground = `
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 html, body {
-  background-color: #F6F4EF;
+  background-color: #000000;
   margin: 0;
   padding: 0;
   overflow: hidden;
 }
 #root {
-  background-color: #F6F4EF;
+  background-color: #000000;
   position: fixed;
   top: 0;
   left: 0;
@@ -88,7 +88,7 @@ html::before {
   left: -9999px;
   right: -9999px;
   bottom: -9999px;
-  background-color: #F6F4EF;
+  background-color: #000000;
   z-index: -1;
 }
 `;

@@ -9,3 +9,18 @@ export const useDropdownClose = () => useContext(DropdownCloseContext);
 export const DropdownDirectionContext = createContext<'up' | 'down'>('up');
 
 export const DropdownDirectionProvider = DropdownDirectionContext.Provider;
+
+type DropdownOpenListener = (id: string) => void;
+
+const dropdownOpenListeners = new Set<DropdownOpenListener>();
+
+export const subscribeToDropdownOpen = (listener: DropdownOpenListener) => {
+  dropdownOpenListeners.add(listener);
+  return () => {
+    dropdownOpenListeners.delete(listener);
+  };
+};
+
+export const notifyDropdownOpened = (id: string) => {
+  dropdownOpenListeners.forEach((listener) => listener(id));
+};
