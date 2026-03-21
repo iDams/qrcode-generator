@@ -31,9 +31,17 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.hoverBackground,
   },
   selectedCircle: {
+    width: Sizes.iconSmall - 2,
+    height: Sizes.iconSmall - 2,
+    borderRadius: (Sizes.iconSmall - 2) / 2,
+  },
+  selectedCircleFrame: {
     width: Sizes.iconSmall,
     height: Sizes.iconSmall,
     borderRadius: Sizes.iconSmall / 2,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
     color: Colors.textMuted,
@@ -72,9 +80,17 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.hoverBackground,
   },
   optionCircle: {
+    width: Sizes.iconSmall - 2,
+    height: Sizes.iconSmall - 2,
+    borderRadius: (Sizes.iconSmall - 2) / 2,
+  },
+  optionCircleFrame: {
     width: Sizes.iconSmall,
     height: Sizes.iconSmall,
     borderRadius: Sizes.iconSmall / 2,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   optionText: {
     color: Colors.textSubtle,

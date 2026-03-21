@@ -1,7 +1,7 @@
 {
   "name": "react-native-qrcode-skia",
   "version": "0.4.0",
-  "description": "A beautiful, highly customizable QR code generator with dynamic gradients, custom logos, and high-resolution SVG/PNG exports. Powered by React Native Skia.",
+  "description": "A customizable QR code toolkit for web and mobile with gradients, shape controls, logo support, SVG/PNG export, and ready-to-use code snippets. Powered by React Native Skia.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/src/index.d.ts",

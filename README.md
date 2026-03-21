@@ -2,9 +2,17 @@
 React Native QRCode Skia 🎨
 </h1>
 
-A beautiful, highly customizable QR code generator with dynamic gradients, custom logos, and high-resolution SVG/PNG exports. Powered by React Native Skia. 
+A customizable QR code toolkit for web and mobile with gradients, shape controls, logo support, SVG/PNG export, and ready-to-use code snippets. Powered by React Native Skia.
 
 Generate your **QR Code** in less than 30 seconds using [qrcode.imarcodev.com](https://qrcode.imarcodev.com).
+
+## What It Does
+
+- Generate QR codes with custom shapes, eye patterns, gaps, gradients, and centered logos.
+- Export high-resolution PNG and SVG files.
+- Copy reusable snippets for SVG, HTML embed, and React Native / Skia.
+- Use the package as a lightweight QR component in React Native apps.
+- Explore and customize everything visually in the web editor.
 
 ## Installation
 
@@ -22,7 +30,7 @@ bun add react-native-qrcode-skia
 
 ## Usage
 
-You might need a very simple QRCode component in your app and you can achieve that by using the basic props (value and size). Here is an example:
+If you only need a simple QRCode component in your app, you can start with the basic props:
 
 ```tsx
 import QRCode from 'react-native-qrcode-skia';
@@ -39,10 +47,12 @@ const App = () => {
 export default App;
 ```
 
-Under the hood, the QRCode is essentially a Skia Path. This means that customization is straightforward using the 'children' prop. Here's an example:
+Under the hood, the QRCode is a Skia Path, so you can customize it through the `children` prop:
 
 ```tsx
 import QRCode from 'react-native-qrcode-skia';
+import { View, Text } from 'react-native';
+import { RadialGradient } from '@shopify/react-native-skia';
 
 const App = () => {
   return (
@@ -75,6 +85,16 @@ const App = () => {
 export default App;
 ```
 
+## Playground
+
+The repository also includes a visual editor where you can:
+
+- tweak colors, gradients, shapes, eye patterns, gaps, and logos,
+- export QR codes as PNG or SVG,
+- copy snippets for HTML embed, SVG, and React Native / Skia.
+
+Try it at [qrcode.imarcodev.com](https://qrcode.imarcodev.com).
+
 ## Props
 
 - `value` (string) - The value encoded in the QRCode.
@@ -95,11 +115,12 @@ export default App;
 
 - `size` (number) - The size of the QRCode.
 
-- `shapeOptions` (ShapeOptions, optional) - The shape options for the QRCode path. ShapeOptions include:
-  - `shape` (BaseShapeOptions, optional) - The shape of the QR code elements. Can be 'square', 'circle', 'rounded', 'diamond', 'triangle', or 'star'. Default is 'rounded'.
-  - `eyePatternShape` (BaseShapeOptions, optional) - The shape of the eye patterns. Can be 'square', 'circle', 'rounded', 'diamond', 'triangle', or 'star'. Default is 'rounded'.
-  - `gap` (number, optional) - The gap between QR code elements. Default is 0.
-  - `eyePatternGap` (number, optional) - The gap in the eye patterns. Default is 0.
+- `shapeOptions` (ShapeOptions, optional) - The shape options for the QRCode path.
+  `shape` controls the main cells.
+  `eyePatternShape` controls the eye patterns.
+  `gap` controls spacing between cells.
+  `eyePatternGap` controls spacing in the eye patterns.
+  Supported shapes are `square`, `circle`, `rounded`, `diamond`, `triangle`, and `star`.
 
 - `logoAreaSize` (number, optional) - The size of the area cleared for the logo in the center of the QR code. Default is 70 when logo is provided, 0 otherwise.
 

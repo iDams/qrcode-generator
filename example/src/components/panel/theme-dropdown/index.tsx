@@ -43,6 +43,24 @@ export const ThemeDropdown = () => {
     }
     return Themes[currentThemeName];
   }, [currentThemeName, normalizedCustomColors]);
+  const currentColors = (currentTheme.colors as string[]).filter(
+    (color): color is string => !!color
+  );
+  const isWhiteTheme = currentColors.every(
+    (color) => color.toUpperCase() === '#FFFFFF'
+  );
+  const isBlackTheme = currentColors.every(
+    (color) => color.toUpperCase() === '#000000'
+  );
+  const swatchBorderColor = isWhiteTheme
+    ? theme.isDark
+      ? 'rgba(255,255,255,0.16)'
+      : 'rgba(30,20,10,0.10)'
+    : isBlackTheme
+      ? theme.isDark
+        ? 'rgba(255,255,255,0.16)'
+        : 'rgba(17,17,17,0.12)'
+      : 'transparent';
 
   const openDropdown = () => {
     animation.value = withTiming(1, TimingPresets.dropdown);
@@ -150,12 +168,14 @@ export const ThemeDropdown = () => {
           },
         ]}
       >
-        <LinearGradient
-          colors={currentTheme.colors as [string, string, ...string[]]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.selectedCircle}
-        />
+        <View style={[styles.selectedCircleFrame, { borderColor: swatchBorderColor }]}>
+          <LinearGradient
+            colors={currentTheme.colors as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.selectedCircle}
+          />
+        </View>
         <Text
           style={[
             styles.buttonText,
