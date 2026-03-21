@@ -4,8 +4,8 @@ import { useSelector } from '@legendapp/state/react';
 import { qrcodeState$, GapValues } from '../states';
 import { Themes } from '../constants';
 import { getSkiaGradientByType } from '../utils/gradient';
-import { StyleSheet, Text, Platform } from 'react-native';
-import { Image } from 'expo-image';
+import { StyleSheet, Text, Platform, Image } from 'react-native';
+import { SvgUri } from 'react-native-svg';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -25,11 +25,6 @@ const SPRING_CONFIG = {
   stiffness: 80,
   damping: 12,
 } as const;
-
-const imageMap: Record<string, any> = {
-  'github-logo': require('../../assets/images/github-logo.png'),
-  'github-mark': require('../../assets/images/github-mark.png'),
-};
 
 const AnimatedLogoEmoji = ({ emoji }: { emoji: string }) => {
   const copyTrigger = useSelector(qrcodeState$.copyTrigger);
@@ -72,9 +67,20 @@ const AnimatedLogoImage = ({ source }: { source: any }) => {
     transform: [{ scale: scale.value }],
   }));
 
+  const sourceUri =
+    typeof source === 'object' && source !== null && 'uri' in source
+      ? source.uri
+      : '';
+  const isSvgDataUri =
+    typeof sourceUri === 'string' && sourceUri.startsWith('data:image/svg+xml');
+
   return (
     <Animated.View style={[styles.logo, animatedStyle]}>
-      <Image source={source} style={styles.logoImage} contentFit="contain" />
+      {isSvgDataUri ? (
+        <SvgUri uri={sourceUri} width={LogoHeight} height={LogoHeight} />
+      ) : (
+        <Image source={source} style={styles.logoImage} resizeMode="contain" />
+      )}
     </Animated.View>
   );
 };
@@ -89,10 +95,6 @@ const LogoContent = () => {
 
   if (selectedLogo.type === 'emoji') {
     return <AnimatedLogoEmoji emoji={selectedLogo.value} />;
-  }
-
-  if (selectedLogo.type === 'image' && imageMap[selectedLogo.value]) {
-    return <AnimatedLogoImage source={imageMap[selectedLogo.value]} />;
   }
 
   return null;

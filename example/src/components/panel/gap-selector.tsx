@@ -4,11 +4,36 @@ import { useSelector } from '@legendapp/state/react';
 import { qrcodeState$, GapSizes, type GapSize } from '../../states';
 import { Themes } from '../../constants';
 import {
-  Colors,
   Spacing,
   Sizes,
   BorderRadius,
 } from '../../design-tokens';
+import { usePanelTheme } from './panel-theme';
+
+const getContrastTextColor = (background: string) => {
+  const rgbMatch = background.match(/\d+(\.\d+)?/g);
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (rgbMatch && rgbMatch.length >= 3) {
+    const rgb = rgbMatch.slice(0, 3).map(Number);
+    r = rgb[0] ?? 0;
+    g = rgb[1] ?? 0;
+    b = rgb[2] ?? 0;
+  } else if (background.startsWith('#')) {
+    const hex = background.slice(1);
+    const normalized = hex.length === 3
+      ? hex.split('').map((char) => char + char).join('')
+      : hex.slice(0, 6);
+    r = parseInt(normalized.slice(0, 2), 16);
+    g = parseInt(normalized.slice(2, 4), 16);
+    b = parseInt(normalized.slice(4, 6), 16);
+  }
+
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.62 ? '#111111' : '#FFFFFF';
+};
 
 type GapSelectorProps = {
   showLabel?: boolean;
@@ -18,6 +43,7 @@ export const GapSelector = ({ showLabel = true }: GapSelectorProps) => {
   const currentValue = useSelector(qrcodeState$.gap);
   const currentThemeName = useSelector(qrcodeState$.currentTheme);
   const theme = Themes[currentThemeName];
+  const panelTheme = usePanelTheme();
 
   return (
     <View style={styles.container}>
@@ -29,6 +55,7 @@ export const GapSelector = ({ showLabel = true }: GapSelectorProps) => {
             size={size}
             isActive={currentValue === size}
             activeColor={theme.colors[0]}
+            panelTheme={panelTheme}
             onPress={() => qrcodeState$.gap.set(size)}
           />
         ))}
@@ -41,6 +68,7 @@ type GapButtonProps = {
   size: GapSize;
   isActive: boolean;
   activeColor: string;
+  panelTheme: ReturnType<typeof usePanelTheme>;
   onPress: () => void;
 };
 
@@ -48,6 +76,7 @@ const GapButton = ({
   size,
   isActive,
   activeColor,
+  panelTheme,
   onPress,
 }: GapButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -66,8 +95,13 @@ const GapButton = ({
       <Text
         style={[
           styles.buttonText,
-          isActive && styles.buttonTextActive,
           !isActive && isHovered && styles.buttonTextHovered,
+          {
+            color: isActive
+              ? getContrastTextColor(activeColor)
+              : panelTheme.textSubtle,
+            fontWeight: isActive ? '700' : '600',
+          },
         ]}
       >
         {size}
@@ -86,13 +120,11 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   label: {
-    color: Colors.textMuted,
     fontSize: 13,
     fontWeight: '500',
   },
   selector: {
     flexDirection: 'row',
-    backgroundColor: Colors.buttonBackground,
     borderRadius: BorderRadius.md,
     padding: 3,
   },
@@ -104,18 +136,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonHovered: {
-    backgroundColor: Colors.hoverBackground,
   },
   buttonText: {
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.textSubtle,
     textTransform: 'uppercase',
   },
   buttonTextHovered: {
-    color: Colors.iconHovered,
-  },
-  buttonTextActive: {
-    color: Colors.textPrimary,
   },
 });

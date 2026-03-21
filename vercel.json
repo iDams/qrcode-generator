@@ -1,14 +1,13 @@
 {
-    "installCommand": "bun install && cd example && bun install",
-    "buildCommand": "cd example && bun run predeploy",
+    "installCommand": "bun install",
+    "buildCommand": "cd example && bun install && bun run predeploy",
     "outputDirectory": "example/dist",
-    "devCommand": "expo",
+    "framework": "create-react-app",
     "cleanUrls": true,
-    "framework": null,
     "rewrites": [
       {
-        "source": "/:path*",
-        "destination": "/"
+        "source": "/(.*)",
+        "destination": "/index.html"
       }
-  ]
+    ]
 }

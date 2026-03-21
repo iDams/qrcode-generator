@@ -82,3 +82,5 @@ lib/
 
 example/dist
 .vercel
+.env*.local
+vercel.json

@@ -71,17 +71,8 @@ export const getCurrentTheme = () => {
   return Themes[themeName];
 };
 
-export const LogoEmojis = ['', '🐶', '🐰', '🦊', '🐼', '🐨'];
-
 export const LogoSamples: Array<{ id: string; type: LogoType; label: string; value?: string }> = [
   { id: 'none', type: 'none', label: 'none' },
-  { id: 'emoji-dog', type: 'emoji', value: '🐶', label: 'dog' },
-  { id: 'emoji-bunny', type: 'emoji', value: '🐰', label: 'bunny' },
-  { id: 'emoji-fox', type: 'emoji', value: '🦊', label: 'fox' },
-  { id: 'emoji-panda', type: 'emoji', value: '🐼', label: 'panda' },
-  { id: 'emoji-koala', type: 'emoji', value: '🐨', label: 'koala' },
-  { id: 'img-github-logo', type: 'image', value: 'github-logo', label: 'github' },
-  { id: 'img-github-mark', type: 'image', value: 'github-mark', label: 'github mark' },
 ];
 
 export type LogoSample = { id: string; type: LogoType; label: string; value?: string };
@@ -94,6 +85,7 @@ export const ExportFormats = ['png', 'svg'] as const;
 export type ExportFormat = (typeof ExportFormats)[number];
 
 export const ExportSizes = [
+  { id: 'original', label: '260px', value: 260 },
   { id: 'small', label: '512px', value: 512 },
   { id: 'medium', label: '1024px', value: 1024 },
   { id: 'large', label: '2048px', value: 2048 },

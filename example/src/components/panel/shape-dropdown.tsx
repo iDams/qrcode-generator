@@ -6,6 +6,7 @@ import type { Observable } from '@legendapp/state';
 import type { BaseShapeOptions } from 'react-native-qrcode-skia';
 import { Shapes } from '../../states';
 import { HoverDropdown, useDropdownClose } from './hover-dropdown';
+import { usePanelTheme } from './panel-theme';
 import { getPathFromShape } from '../../utils/shape-path';
 import { Colors, Spacing, Sizes } from '../../design-tokens';
 
@@ -15,6 +16,7 @@ type ShapeDropdownProps = {
 
 export const ShapeDropdown = ({ value$ }: ShapeDropdownProps) => {
   const value = useSelector(value$);
+  const theme = usePanelTheme();
   const shapePath = useMemo(
     () => getPathFromShape(value, Sizes.shapePreview),
     [value]
@@ -30,7 +32,7 @@ export const ShapeDropdown = ({ value$ }: ShapeDropdownProps) => {
             height={Sizes.shapePreview}
             viewBox={`0 0 ${Sizes.shapePreview} ${Sizes.shapePreview}`}
           >
-            <Path d={shapePath} fill="white" />
+            <Path d={shapePath} fill={theme.textPrimary} />
           </Svg>
         </View>
       }
@@ -56,6 +58,7 @@ type ShapeOptionProps = {
 const ShapeOption = ({ shape, isSelected, onSelect }: ShapeOptionProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const closeDropdown = useDropdownClose();
+  const theme = usePanelTheme();
   const shapePath = useMemo(
     () => getPathFromShape(shape, Sizes.shapePreview),
     [shape]
@@ -73,7 +76,7 @@ const ShapeOption = ({ shape, isSelected, onSelect }: ShapeOptionProps) => {
       onHoverOut={() => setIsHovered(false)}
       style={[
         styles.option,
-        (isHovered || isSelected) && styles.optionHovered,
+        { backgroundColor: isHovered || isSelected ? theme.hoverBackground : 'transparent' },
       ]}
     >
       <View style={styles.shapePreview}>
@@ -82,13 +85,13 @@ const ShapeOption = ({ shape, isSelected, onSelect }: ShapeOptionProps) => {
           height={Sizes.shapePreview}
           viewBox={`0 0 ${Sizes.shapePreview} ${Sizes.shapePreview}`}
         >
-          <Path d={shapePath} fill="white" />
+          <Path d={shapePath} fill={theme.textPrimary} />
         </Svg>
       </View>
       <Text
         style={[
           styles.optionText,
-          (isHovered || isSelected) && styles.optionTextHovered,
+          { color: isHovered || isSelected ? theme.textPrimary : theme.textSubtle },
         ]}
       >
         {shape}

@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, Pressable, View } from 'react-native';
 import { useSelector } from '@legendapp/state/react';
 import { qrcodeState$, ExportFormats, ExportSizes, type ExportFormat } from '../../states';
-import { HoverDropdown, useDropdownClose } from './hover-dropdown';
-import { Colors, Spacing } from '../../design-tokens';
+import { HoverDropdown } from './hover-dropdown';
+import { Spacing } from '../../design-tokens';
 import { useExportQrCodeImage } from '../qrcode-copy-button/hooks/use-export-qrcode-image';
+import { usePanelTheme } from './panel-theme';
 
-const FormatIcon = ({ format }: { format: string }) => {
+const FormatIcon = ({ format, color }: { format: string; color: string }) => {
   if (format === 'svg') {
-    return <Text style={styles.formatIcon}>▲</Text>;
+    return <Text style={[styles.formatIcon, { color }]}>▲</Text>;
   }
-  return <Text style={styles.formatIcon}>◼</Text>;
+  return <Text style={[styles.formatIcon, { color }]}>◼</Text>;
 };
 
 export const ExportDropdown = () => {
@@ -18,6 +19,7 @@ export const ExportDropdown = () => {
   const exportSize = useSelector(qrcodeState$.exportSize);
   const exportImage = useExportQrCodeImage();
   const [isHovered, setIsHovered] = useState(false);
+  const theme = usePanelTheme();
 
   const currentLabel = () => {
     const sizeLabel = ExportSizes.find(s => s.value === exportSize)?.label || '1024px';
@@ -28,13 +30,13 @@ export const ExportDropdown = () => {
     <HoverDropdown
       trigger={
         <View style={styles.triggerContainer}>
-          <FormatIcon format={exportFormat} />
-          <Text style={styles.triggerText}>{currentLabel()}</Text>
+          <FormatIcon format={exportFormat} color={theme.iconDefault} />
+          <Text style={[styles.triggerText, { color: theme.textPrimary }]}>{currentLabel()}</Text>
         </View>
       }
     >
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>FORMAT</Text>
+        <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>FORMAT</Text>
         {ExportFormats.map((format) => (
           <FormatOption
             key={format}
@@ -44,9 +46,9 @@ export const ExportDropdown = () => {
           />
         ))}
       </View>
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: theme.borderDropdown }]} />
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>SIZE</Text>
+        <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>SIZE</Text>
         {ExportSizes.map((size) => (
           <SizeOption
             key={size.id}
@@ -56,14 +58,20 @@ export const ExportDropdown = () => {
           />
         ))}
       </View>
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: theme.borderDropdown }]} />
       <Pressable
         onPress={exportImage}
         onHoverIn={() => setIsHovered(true)}
         onHoverOut={() => setIsHovered(false)}
-        style={[styles.exportButton, isHovered && styles.exportButtonHovered]}
+        style={[
+          styles.exportButton,
+          {
+            backgroundColor: isHovered ? theme.activeBackground : theme.buttonBackground,
+            borderColor: theme.groupBorder,
+          },
+        ]}
       >
-        <Text style={styles.exportButtonText}>Download</Text>
+        <Text style={[styles.exportButtonText, { color: theme.textPrimary }]}>Download</Text>
       </Pressable>
     </HoverDropdown>
   );
@@ -77,11 +85,10 @@ type FormatOptionProps = {
 
 const FormatOption = ({ format, isSelected, onSelect }: FormatOptionProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const closeDropdown = useDropdownClose();
+  const theme = usePanelTheme();
 
   const handlePress = () => {
     onSelect();
-    closeDropdown?.();
   };
 
   return (
@@ -91,11 +98,18 @@ const FormatOption = ({ format, isSelected, onSelect }: FormatOptionProps) => {
       onHoverOut={() => setIsHovered(false)}
       style={[
         styles.option,
-        (isHovered || isSelected) && styles.optionHovered,
+        {
+          backgroundColor: isHovered || isSelected ? theme.hoverBackground : 'transparent',
+        },
       ]}
     >
-      <FormatIcon format={format} />
-      <Text style={[styles.optionText, (isHovered || isSelected) && styles.optionTextHovered]}>
+      <FormatIcon format={format} color={theme.iconDefault} />
+      <Text
+        style={[
+          styles.optionText,
+          { color: isHovered || isSelected ? theme.textPrimary : theme.textSubtle },
+        ]}
+      >
         {format.toUpperCase()}
       </Text>
     </Pressable>
@@ -110,11 +124,10 @@ type SizeOptionProps = {
 
 const SizeOption = ({ size, isSelected, onSelect }: SizeOptionProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const closeDropdown = useDropdownClose();
+  const theme = usePanelTheme();
 
   const handlePress = () => {
     onSelect();
-    closeDropdown?.();
   };
 
   return (
@@ -124,10 +137,17 @@ const SizeOption = ({ size, isSelected, onSelect }: SizeOptionProps) => {
       onHoverOut={() => setIsHovered(false)}
       style={[
         styles.option,
-        (isHovered || isSelected) && styles.optionHovered,
+        {
+          backgroundColor: isHovered || isSelected ? theme.hoverBackground : 'transparent',
+        },
       ]}
     >
-      <Text style={[styles.optionText, (isHovered || isSelected) && styles.optionTextHovered]}>
+      <Text
+        style={[
+          styles.optionText,
+          { color: isHovered || isSelected ? theme.textPrimary : theme.textSubtle },
+        ]}
+      >
         {size.label}
       </Text>
     </Pressable>
@@ -143,11 +163,9 @@ const styles = StyleSheet.create({
   triggerText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   formatIcon: {
     fontSize: 10,
-    color: Colors.textPrimary,
   },
   section: {
     paddingVertical: Spacing.xs,
@@ -155,7 +173,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 10,
     fontWeight: '600',
-    color: Colors.textMuted,
     paddingHorizontal: Spacing.xxl,
     paddingVertical: Spacing.xs,
     letterSpacing: 0.5,
@@ -167,20 +184,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xxl,
     gap: Spacing.md,
   },
-  optionHovered: {
-    backgroundColor: Colors.hoverBackground,
-  },
   optionText: {
-    color: Colors.textSubtle,
     fontSize: 13,
     fontWeight: '500',
   },
-  optionTextHovered: {
-    color: Colors.textPrimary,
-  },
   divider: {
     height: 1,
-    backgroundColor: Colors.borderSubtle,
     marginVertical: Spacing.xs,
     marginHorizontal: Spacing.lg,
   },
@@ -189,15 +198,11 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.sm,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xl,
-    backgroundColor: Colors.buttonBackground,
     borderRadius: 8,
     alignItems: 'center',
-  },
-  exportButtonHovered: {
-    backgroundColor: Colors.activeBackground,
+    borderWidth: 1,
   },
   exportButtonText: {
-    color: Colors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
   },

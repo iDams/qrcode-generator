@@ -10,7 +10,7 @@
     "postinstall": "cd .. && npx patch-package --patch-dir example/patches && cd example && bun setup-skia-web && node path-fs-canvaskit-postinstall.js",
     "copy-canvaskit-in-dist": "cp -r public/canvaskit.wasm dist/_expo/static/js/web/canvaskit.wasm",
     "deploy": "gh-pages -t -d dist",
-    "predeploy": "expo export -p web && bun copy-canvaskit-in-dist"
+    "predeploy": "expo export -p web && bun run copy-canvaskit-in-dist"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",

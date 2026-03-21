@@ -3,44 +3,25 @@ import { StyleSheet, Text, Pressable, View, Alert } from 'react-native';
 import { useSelector } from '@legendapp/state/react';
 import { qrcodeState$, LogoSamples, type LogoSample, type SelectedLogo } from '../../states';
 import { HoverDropdown, useDropdownClose } from './hover-dropdown';
-import { Colors, Spacing } from '../../design-tokens';
+import { Spacing } from '../../design-tokens';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-
-const LogoImage = ({ logoId, size = 20 }: { logoId: string; size?: number }) => {
-  const imageMap: Record<string, any> = {
-    'github-logo': require('../../../assets/images/github-logo.png'),
-    'github-mark': require('../../../assets/images/github-mark.png'),
-  };
-
-  const source = imageMap[logoId];
-  if (!source) return null;
-
-  return (
-    <Image
-      source={source}
-      style={{ width: size, height: size }}
-      contentFit="contain"
-    />
-  );
-};
+import { usePanelTheme } from './panel-theme';
 
 export const LogoDropdown = () => {
   const selectedLogo = useSelector(qrcodeState$.selectedLogo);
   const customLogoUri = useSelector(qrcodeState$.customLogoUri);
   const [isUploadHovered, setIsUploadHovered] = useState(false);
+  const theme = usePanelTheme();
 
-  const currentDisplay = () => {
+  const currentDisplay = (theme: ReturnType<typeof usePanelTheme>) => {
     if (customLogoUri) {
       return <Image source={{ uri: customLogoUri }} style={styles.customLogoPreview} contentFit="contain" />;
     }
     if (selectedLogo.type === 'emoji') {
-      return <Text style={styles.triggerEmoji}>{selectedLogo.value || '—'}</Text>;
+      return <Text style={[styles.triggerEmoji, { color: theme.textPrimary }]}>{selectedLogo.value || '—'}</Text>;
     }
-    if (selectedLogo.type === 'image') {
-      return <LogoImage logoId={selectedLogo.value} size={20} />;
-    }
-    return <Text style={styles.triggerEmoji}>—</Text>;
+    return <Text style={[styles.triggerEmoji, { color: theme.textPrimary }]}>—</Text>;
   };
 
   const handleLogoSelect = (logo: LogoSample) => {
@@ -80,7 +61,7 @@ export const LogoDropdown = () => {
       label="Logo"
       trigger={
         <View style={styles.triggerContainer}>
-          {currentDisplay()}
+          {currentDisplay(theme)}
         </View>
       }
     >
@@ -97,10 +78,13 @@ export const LogoDropdown = () => {
         onPress={handleCustomImageUpload}
         onHoverIn={() => setIsUploadHovered(true)}
         onHoverOut={() => setIsUploadHovered(false)}
-        style={[styles.option, isUploadHovered && styles.optionHovered]}
+        style={[
+          styles.option,
+          { backgroundColor: isUploadHovered ? theme.hoverBackground : 'transparent' },
+        ]}
       >
-        <Text style={styles.uploadIcon}>📁</Text>
-        <Text style={styles.optionText}>Upload image</Text>
+        <Text style={[styles.uploadIcon, { color: theme.textPrimary }]}>📁</Text>
+        <Text style={[styles.optionText, { color: theme.textPrimary }]}>Upload image</Text>
       </Pressable>
     </HoverDropdown>
   );
@@ -115,6 +99,7 @@ type LogoOptionProps = {
 const LogoOption = ({ logo, isSelected, onSelect }: LogoOptionProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const closeDropdown = useDropdownClose();
+  const theme = usePanelTheme();
 
   const handlePress = () => {
     onSelect();
@@ -128,24 +113,21 @@ const LogoOption = ({ logo, isSelected, onSelect }: LogoOptionProps) => {
       onHoverOut={() => setIsHovered(false)}
       style={[
         styles.option,
-        (isHovered || isSelected) && styles.optionHovered,
+        { backgroundColor: isHovered || isSelected ? theme.hoverBackground : 'transparent' },
       ]}
     >
       <View style={styles.logoPreview}>
         {logo.type === 'emoji' && (
-          <Text style={styles.optionEmoji}>{logo.value || '—'}</Text>
-        )}
-        {logo.type === 'image' && logo.value && (
-          <LogoImage logoId={logo.value} size={20} />
+          <Text style={[styles.optionEmoji, { color: theme.textPrimary }]}>{logo.value || '—'}</Text>
         )}
         {logo.type === 'none' && (
-          <Text style={styles.optionEmoji}>—</Text>
+          <Text style={[styles.optionEmoji, { color: theme.textPrimary }]}>—</Text>
         )}
       </View>
       <Text
         style={[
           styles.optionText,
-          (isHovered || isSelected) && styles.optionTextHovered,
+          { color: isHovered || isSelected ? theme.textPrimary : theme.textSubtle },
         ]}
       >
         {logo.label}
@@ -162,7 +144,6 @@ const styles = StyleSheet.create({
   },
   triggerEmoji: {
     fontSize: 16,
-    color: Colors.textPrimary,
   },
   customLogoPreview: {
     width: 24,
@@ -175,9 +156,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xxl,
     gap: Spacing.lg,
   },
-  optionHovered: {
-    backgroundColor: Colors.hoverBackground,
-  },
   logoPreview: {
     width: 20,
     height: 20,
@@ -186,19 +164,13 @@ const styles = StyleSheet.create({
   },
   optionEmoji: {
     fontSize: 16,
-    color: Colors.textPrimary,
   },
   optionText: {
-    color: Colors.textSubtle,
     fontSize: 13,
     fontWeight: '500',
   },
-  optionTextHovered: {
-    color: Colors.textPrimary,
-  },
   divider: {
     height: 1,
-    backgroundColor: Colors.hoverBackground,
     marginVertical: Spacing.sm,
     marginHorizontal: Spacing.lg,
   },

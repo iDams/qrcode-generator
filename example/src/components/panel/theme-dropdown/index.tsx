@@ -10,10 +10,10 @@ import { useSelector } from '@legendapp/state/react';
 import { ChevronIcon } from '../../icons';
 import { Themes, type ThemeName, type Theme } from '../../../constants';
 import { qrcodeState$ } from '../../../states';
-import { Colors } from '../../../design-tokens';
 import { TimingPresets } from '../../../animations';
 import { ThemeOption } from './theme-option';
 import { styles } from './styles';
+import { usePanelTheme } from '../panel-theme';
 
 const formatThemeName = (name: ThemeName) => {
   if (name === 'mono') return 'Black';
@@ -33,6 +33,7 @@ export const ThemeDropdown = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isTapOpen, setIsTapOpen] = useState(false);
   const animation = useSharedValue(0);
+  const theme = usePanelTheme();
   const normalizedCustomColors: string[] =
     customColors.length >= 2 ? customColors : ['#FFFFFF', '#BC002D'];
 
@@ -107,7 +108,16 @@ export const ThemeDropdown = () => {
       )}
 
       <Animated.View style={[styles.dropdown, dropdownStyle]}>
-        <View style={styles.dropdownContent}>
+        <View
+          style={[
+            styles.dropdownContent,
+            {
+              backgroundColor: theme.dropdownBackground,
+              borderColor: theme.borderDropdown,
+              shadowColor: theme.shadowColor,
+            },
+          ]}
+        >
           {(Object.keys(Themes) as ThemeName[]).map((themeName) => {
             const theme =
               themeName === 'custom'
@@ -133,7 +143,12 @@ export const ThemeDropdown = () => {
         onPress={handlePress}
         onHoverIn={() => setIsHovered(true)}
         onHoverOut={() => setIsHovered(false)}
-        style={[styles.button, (isHovered || isTapOpen) && styles.buttonHovered]}
+        style={[
+          styles.button,
+          {
+            backgroundColor: isHovered || isTapOpen ? theme.hoverBackground : 'transparent',
+          },
+        ]}
       >
         <LinearGradient
           colors={currentTheme.colors as [string, string, ...string[]]}
@@ -141,11 +156,16 @@ export const ThemeDropdown = () => {
           end={{ x: 1, y: 1 }}
           style={styles.selectedCircle}
         />
-        <Text style={[styles.buttonText, (isHovered || isTapOpen) && styles.buttonTextHovered]}>
+        <Text
+          style={[
+            styles.buttonText,
+            { color: isHovered || isTapOpen ? theme.textHovered : theme.textMuted },
+          ]}
+        >
           Colors
         </Text>
         <Animated.View style={chevronStyle}>
-          <ChevronIcon color={isTapOpen ? Colors.iconHovered : Colors.iconMuted} />
+          <ChevronIcon color={isTapOpen ? theme.iconHovered : theme.iconMuted} />
         </Animated.View>
       </Pressable>
     </View>

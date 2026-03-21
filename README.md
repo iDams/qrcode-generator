@@ -4,9 +4,7 @@ React Native QRCode Skia 🎨
 
 A lightweight and high-performance QR code generator component for React Native, powered by Skia rendering engine. 
 
-Generate your **QR Code** in less than 30 seconds using [imarcodev.com](https://imarcodev.com).
-
-https://github.com/user-attachments/assets/c3b69c77-e4ca-40ee-a554-7b1f13fbe9df
+Generate your **QR Code** in less than 30 seconds using [qrcode.imarcodev.com](https://qrcode.imarcodev.com).
 
 ## Installation
 
@@ -32,7 +30,7 @@ import QRCode from 'react-native-qrcode-skia';
 const App = () => {
   return (
     <QRCode
-      value="https://imarcodev.com"
+      value="https://qrcode.imarcodev.com"
       size={200}
     />
   );
@@ -49,7 +47,7 @@ import QRCode from 'react-native-qrcode-skia';
 const App = () => {
   return (
     <QRCode
-      value="https://imarcodev.com"
+      value="https://qrcode.imarcodev.com"
       size={200}
       shapeOptions={{
         shape: "circle",
@@ -109,20 +107,16 @@ export default App;
 
 - `logo` (React.ReactNode, optional) - A React node to render as the logo in the center of the QR code. When provided, a square area is cleared in the center to make room for the logo.
 
-## Would you like to support me?
-
-If you like my work and want to support me, consider [sponsoring me on GitHub](https://github.com/sponsors/enzomanuelmangano).
-
-Also, if you're into animations, check out [my course (Reanimate.dev)](https://www.reanimate.dev) where you can learn how to create amazing React Native animations.
-
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+
+## Credits
+
+This project was originally created by [Enzo Manuel Mangano](https://github.com/enzomanuelmangano).
 
 ## License
 
 MIT
 
----
-
-Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)
+This library continues to be released under the MIT License, respecting the original open-source foundations.

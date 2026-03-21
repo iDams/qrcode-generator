@@ -7,9 +7,9 @@ import { useSelector } from '@legendapp/state/react';
 import { qrcodeState$, Shapes } from '../../../states';
 import { Themes } from '../../../constants';
 import { getPathFromShape } from '../../../utils/shape-path';
-import { Colors } from '../../../design-tokens';
 import { styles } from './styles';
 import type { BaseShapeOptions } from 'react-native-qrcode-skia';
+import { usePanelTheme } from '../panel-theme';
 
 const formatShapeName = (name: string) =>
   name.charAt(0).toUpperCase() + name.slice(1);
@@ -18,6 +18,7 @@ export const EyeSelector = () => {
   const currentShape = useSelector(qrcodeState$.eyePatternShape);
   const currentTheme = useSelector(qrcodeState$.currentTheme);
   const themeColor = Themes[currentTheme].colors[0];
+  const theme = usePanelTheme();
 
   const handleSelect = useCallback((shape: BaseShapeOptions) => {
     if (shape === qrcodeState$.eyePatternShape.peek()) return;
@@ -39,10 +40,15 @@ export const EyeSelector = () => {
           <PressableScale
             key={shape}
             onPress={() => handleSelect(shape)}
-            style={[styles.shapeOption, isSelected && { backgroundColor: themeColor }]}
+            style={[
+              styles.shapeOption,
+              {
+                backgroundColor: isSelected ? themeColor : theme.buttonBackground,
+              },
+            ]}
           >
             <Svg width={16} height={16} viewBox="0 0 16 16">
-              <Path d={shapePath} fill={Colors.textPrimary} />
+              <Path d={shapePath} fill={theme.textPrimary} />
             </Svg>
           </PressableScale>
         );

@@ -41,7 +41,7 @@ export const PageThemeToggle = () => {
               isHovered && styles.textHovered,
             ]}
           >
-            {isDark ? 'Day mode' : 'Dark mode'}
+            {isDark ? 'Light mode' : 'Dark mode'}
           </Text>
         </>
       )}

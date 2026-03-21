@@ -15,6 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePanelTheme } from '../panel-theme';
 import { SpringPresets } from '../../../animations';
 import { styles } from './styles';
 import { ThemeSelector } from './theme-selector';
@@ -34,6 +35,7 @@ interface MobileMenuProps {
 export const MobileMenu = ({ visible, onClose, progress }: MobileMenuProps) => {
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
+  const theme = usePanelTheme();
   const localProgress = useSharedValue(visible ? 1 : 0);
   const animation = progress ?? localProgress;
   const translateY = useSharedValue(0);
@@ -83,7 +85,13 @@ export const MobileMenu = ({ visible, onClose, progress }: MobileMenuProps) => {
       style={[StyleSheet.absoluteFill, styles.container]}
       pointerEvents={visible ? 'auto' : 'none'}
     >
-      <Animated.View style={[styles.backdrop, backdropStyle]}>
+      <Animated.View
+        style={[
+          styles.backdrop,
+          { backgroundColor: theme.backdrop },
+          backdropStyle,
+        ]}
+      >
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       </Animated.View>
       <Animated.View style={[styles.gestureWrapper, wrapperStyle]}>
@@ -91,35 +99,40 @@ export const MobileMenu = ({ visible, onClose, progress }: MobileMenuProps) => {
           <View
             style={[
               styles.menu,
-              { paddingBottom: Math.max(insets.bottom, 20) },
+              {
+                paddingBottom: Math.max(insets.bottom, 20),
+                backgroundColor: theme.panelBackground,
+                borderColor: theme.panelBorder,
+                shadowColor: theme.shadowColor,
+              },
             ]}
           >
             <View style={styles.handleContainer}>
-              <View style={styles.handle} />
+              <View style={[styles.handle, { backgroundColor: theme.borderDropdown }]} />
             </View>
             <View style={styles.content}>
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Colors</Text>
+                <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>Colors</Text>
                 <ThemeSelector />
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Shape</Text>
+                <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>Shape</Text>
                 <ShapeSelector />
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Eye Pattern</Text>
+                <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>Eye Pattern</Text>
                 <EyeSelector />
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Gap</Text>
+                <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>Gap</Text>
                 <GapSelector />
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Logo</Text>
+                <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>Logo</Text>
                 <LogoSelector />
               </View>
             </View>

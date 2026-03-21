@@ -3,6 +3,7 @@ import { Text, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { Theme } from '../../../constants';
 import { styles } from './styles';
+import { usePanelTheme } from '../panel-theme';
 
 interface ThemeOptionProps {
   name: string;
@@ -13,24 +14,27 @@ interface ThemeOptionProps {
 
 export const ThemeOption = ({
   name,
-  theme,
+  theme: themeConfig,
   isSelected,
   onPress,
 }: ThemeOptionProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const panelTheme = usePanelTheme();
 
   return (
     <Pressable
       style={[
         styles.option,
-        (isHovered || isSelected) && styles.optionHovered,
+        {
+          backgroundColor: isHovered || isSelected ? panelTheme.hoverBackground : 'transparent',
+        },
       ]}
       onPress={onPress}
       onHoverIn={() => setIsHovered(true)}
       onHoverOut={() => setIsHovered(false)}
     >
       <LinearGradient
-        colors={theme.colors}
+        colors={themeConfig.colors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.optionCircle}
@@ -38,7 +42,9 @@ export const ThemeOption = ({
       <Text
         style={[
           styles.optionText,
-          (isHovered || isSelected) && styles.optionTextHovered,
+          {
+            color: isHovered || isSelected ? panelTheme.textPrimary : panelTheme.textSubtle,
+          },
         ]}
       >
         {name}

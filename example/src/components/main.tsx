@@ -9,6 +9,8 @@ import {
   View,
   ActivityIndicator,
   useWindowDimensions,
+  Text,
+  Linking,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -23,12 +25,14 @@ import { CustomColorModal } from './custom-color-modal';
 import { Colors } from '../design-tokens';
 import { qrcodeState$ } from '../states';
 import { PageThemeToggle } from './page-theme-toggle';
+import { HoverPressable } from './hover-pressable';
 
 const DRAWER_MAX_HEIGHT_PERCENT = 0.7;
 
 export default function App() {
   const { height: windowHeight } = useWindowDimensions();
   const [isURLModalVisible, setIsURLModalVisible] = useState(false);
+  const [isPageReady, setIsPageReady] = useState(false);
   const drawerProgress = useSharedValue(0);
   const pageTheme = useSelector(qrcodeState$.pageTheme);
   const isDark = pageTheme === 'dark';
@@ -52,6 +56,10 @@ export default function App() {
 
   const handleURLModalClose = useCallback(() => {
     setIsURLModalVisible(false);
+  }, []);
+
+  const handleBrandPress = useCallback(() => {
+    Linking.openURL('https://imarcodev.com');
   }, []);
 
   const contentAnimatedStyle = useAnimatedStyle(() => {
@@ -90,9 +98,38 @@ export default function App() {
   return (
     <View style={[styles.container, isDark ? styles.dark : styles.light]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <View style={styles.topRight}>
-        <PageThemeToggle />
+      <View style={styles.topLeft}>
+        <HoverPressable
+          onPress={handleBrandPress}
+          style={styles.brandMark}
+          hoverStyle={styles.brandMarkHovered}
+          pressedStyle={styles.brandMarkPressed}
+        >
+          <>
+            <Text
+              style={[
+                styles.brandSymbol,
+                { color: isDark ? '#D4AF37' : '#9A7A1E' },
+              ]}
+            >
+              マルコ
+            </Text>
+            <Text
+              style={[
+                styles.brandName,
+                { color: isDark ? Colors.textPrimary : '#111111' },
+              ]}
+            >
+              Marco.
+            </Text>
+          </>
+        </HoverPressable>
       </View>
+      {isPageReady && (
+        <View style={styles.topRight}>
+          <PageThemeToggle />
+        </View>
+      )}
       <Animated.View style={[styles.content, contentAnimatedStyle]}>
         <React.Suspense
           fallback={
@@ -101,7 +138,7 @@ export default function App() {
             </View>
           }
         >
-          <QRCodeDisplay />
+          <QRCodeDisplay onReady={() => setIsPageReady(true)} />
         </React.Suspense>
       </Animated.View>
       <Panel
@@ -137,6 +174,37 @@ const styles = StyleSheet.create({
     top: 16,
     right: 16,
     zIndex: 300,
+  },
+  topLeft: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    zIndex: 300,
+  },
+  brandMark: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  brandMarkHovered: {
+    opacity: 0.9,
+  },
+  brandMarkPressed: {
+    opacity: 0.75,
+  },
+  brandSymbol: {
+    fontSize: 16,
+    lineHeight: 18,
+    fontWeight: '400',
+    letterSpacing: 0,
+  },
+  brandName: {
+    fontSize: 20,
+    lineHeight: 22,
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
   loader: {
     width: 320,

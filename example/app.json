@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Skia QRCode",
-    "slug": "skia-qrcode",
+    "name": "IMarcoDev QR Generator",
+    "slug": "imarcodev-qr-generator",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,7 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
-    "scheme": "skia-qrcode",
+    "scheme": "imarcodev-qr-generator",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -31,7 +31,7 @@
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png",
+      "favicon": "./assets/icon.png",
       "bundler": "metro",
       "output": "static",
       "backgroundColor": "#000000"

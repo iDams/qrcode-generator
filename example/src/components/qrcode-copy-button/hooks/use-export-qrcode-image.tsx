@@ -9,10 +9,14 @@ import { generateMatrix } from '../../../../../src/qrcode/generate-matrix';
 import { transformMatrixIntoPath } from '../../../../../src/qrcode/transform-matrix-into-path';
 
 const DefaultPadding = 128;
+const BasePreviewQrSize = 260;
+const BasePreviewLogoAreaSize = 80;
+const BasePreviewLogoVisualSize = 58;
+const BasePreviewLogoFontSize = 42;
 
-const imageMap: Record<string, string> = {
-  'github-logo': 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
-  'github-mark': 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
+const imageMap: Record<string, any> = {
+  'github-logo': require('../../../../assets/images/github-logo.png'),
+  'github-mark': require('../../../../assets/images/github-mark.png'),
 };
 
 export const useExportQrCodeImage = () => {
@@ -39,7 +43,9 @@ export const useExportQrCodeImage = () => {
       const center = totalSize / 2;
       const logoCenter = center;
       const colors = theme.colors;
-      const logoSize = Math.round(38 * (size / 220) * 1.5);
+      const scaleFactor = size / BasePreviewQrSize;
+      const logoSize = Math.round(BasePreviewLogoVisualSize * scaleFactor);
+      const gradientId = getGradientId(gradientType);
 
       let gradientDef = '';
       let gradientFill = '';
@@ -50,34 +56,34 @@ export const useExportQrCodeImage = () => {
         const stops = colors.map((c, i) => `<stop offset="${Math.round((i / (colors.length - 1)) * 100)}%" stop-color="${c}"/>`).join('\n              ');
         switch (gradientType) {
           case 'radial':
-            gradientDef = `<radialGradient id="${getGradientId(gradientType)}" cx="50%" cy="50%" r="50%">
+            gradientDef = `<radialGradient id="${gradientId}" gradientUnits="userSpaceOnUse" cx="${size / 2}" cy="${size / 2}" r="${size / 2}">
               ${stops}
             </radialGradient>`;
-            gradientFill = `url(#${getGradientId(gradientType)})`;
+            gradientFill = `url(#${gradientId})`;
             break;
           case 'linear':
-            gradientDef = `<linearGradient id="${getGradientId(gradientType)}" x1="0%" y1="0%" x2="100%" y2="0%">
+            gradientDef = `<linearGradient id="${gradientId}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${size}" y2="${size}">
               ${stops}
             </linearGradient>`;
-            gradientFill = `url(#${getGradientId(gradientType)})`;
+            gradientFill = `url(#${gradientId})`;
             break;
           case 'linear-vertical':
-            gradientDef = `<linearGradient id="${getGradientId(gradientType)}" x1="0%" y1="0%" x2="0%" y2="100%">
+            gradientDef = `<linearGradient id="${gradientId}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${size}">
               ${stops}
             </linearGradient>`;
-            gradientFill = `url(#${getGradientId(gradientType)})`;
+            gradientFill = `url(#${gradientId})`;
             break;
           case 'sweep':
-            gradientDef = `<linearGradient id="${getGradientId(gradientType)}" x1="0%" y1="0%" x2="100%" y2="100%">
+            gradientDef = `<linearGradient id="${gradientId}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${size}" y2="${size}">
               ${stops}
             </linearGradient>`;
-            gradientFill = `url(#${getGradientId(gradientType)})`;
+            gradientFill = `url(#${gradientId})`;
             break;
           case 'conical':
-            gradientDef = `<linearGradient id="${getGradientId(gradientType)}" x1="0%" y1="0%" x2="100%" y2="100%">
+            gradientDef = `<linearGradient id="${gradientId}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${size}" y2="${size}">
               ${stops}
             </linearGradient>`;
-            gradientFill = `url(#${getGradientId(gradientType)})`;
+            gradientFill = `url(#${gradientId})`;
             break;
           default:
             gradientFill = colors[0]!;
@@ -99,7 +105,7 @@ export const useExportQrCodeImage = () => {
   </g>
 </svg>`;
         }
-        const fontSize = Math.round(38 * (size / 220));
+        const fontSize = Math.round(BasePreviewLogoFontSize * scaleFactor);
         logoSvg = `<text x="${logoCenter}" y="${logoCenter}" font-size="${fontSize}" text-anchor="middle" dominant-baseline="central">${emojiValue}</text>`;
       } else if (selectedLogo && selectedLogo.type === 'image' && selectedLogo.value && imageMap[selectedLogo.value]) {
         // Image logo - use image element with embedded data URI fallback
@@ -119,7 +125,7 @@ export const useExportQrCodeImage = () => {
   ${logoSvg}
 </svg>`;
     },
-    [gradientType, theme.colors, selectedLogo]
+    [gradientType, theme.colors, selectedLogo, customLogoUri]
   );
 
   const exportAsPng = useCallback(
@@ -137,8 +143,12 @@ export const useExportQrCodeImage = () => {
       const value = qrUrl || ':)';
       const matrix = generateMatrix(value, 'H');
       // Logo UI base scale logic to compute scaled logo area size
-      const scaleFactor = size / 220; 
-      const scaledLogoAreaSize = (selectedLogo && selectedLogo.type !== 'none') || customLogoUri ? 70 * scaleFactor : 0;
+      const scaleFactor = size / BasePreviewQrSize;
+      const scaledGap = gap * scaleFactor;
+      const scaledLogoAreaSize =
+        (selectedLogo && selectedLogo.type !== 'none') || customLogoUri
+          ? BasePreviewLogoAreaSize * scaleFactor
+          : 0;
       
       const pathData = transformMatrixIntoPath(
         matrix,
@@ -146,8 +156,8 @@ export const useExportQrCodeImage = () => {
         {
           shape: baseShape,
           eyePatternShape: eyePatternShape,
-          gap: gap,
-          eyePatternGap: gap,
+          gap: scaledGap,
+          eyePatternGap: scaledGap,
         },
         scaledLogoAreaSize
       );
@@ -159,14 +169,20 @@ export const useExportQrCodeImage = () => {
 
       const paint = Skia.Paint();
       const colors = (theme.colors as string[]).filter(Boolean).map((c: string) => Skia.Color(c));
-      const center = totalSize / 2;
+      
+      // Gradients are drawn *after* the canvas translates by DefaultPadding,
+      // so their local coordinates should start at 0, not DefaultPadding!
+      const localQrLeft = 0;
+      const localQrTop = 0;
+      const localQrCenterX = size / 2;
+      const localQrCenterY = size / 2;
 
       let shader;
       if (!isSolidTheme) {
         switch (gradientType) {
           case 'radial':
             shader = Skia.Shader.MakeRadialGradient(
-              { x: center, y: center },
+              { x: localQrCenterX, y: localQrCenterY },
               size / 2,
               colors,
               null,
@@ -175,8 +191,8 @@ export const useExportQrCodeImage = () => {
             break;
           case 'linear':
             shader = Skia.Shader.MakeLinearGradient(
-              { x: DefaultPadding, y: center },
-              { x: DefaultPadding + size, y: center },
+              { x: localQrLeft, y: localQrTop },
+              { x: localQrLeft + size, y: localQrTop + size },
               colors,
               null,
               0
@@ -184,22 +200,22 @@ export const useExportQrCodeImage = () => {
             break;
           case 'linear-vertical':
             shader = Skia.Shader.MakeLinearGradient(
-              { x: center, y: DefaultPadding },
-              { x: center, y: DefaultPadding + size },
+              { x: localQrLeft, y: localQrTop },
+              { x: localQrLeft, y: localQrTop + size },
               colors,
               null,
               0
             );
             break;
           case 'sweep':
-            shader = Skia.Shader.MakeSweepGradient(center, center, colors, null, 0);
+            shader = Skia.Shader.MakeSweepGradient(localQrCenterX, localQrCenterY, colors, null, 0);
             break;
           case 'conical':
             shader = Skia.Shader.MakeTwoPointConicalGradient(
-              { x: center, y: center },
-              0,
-              { x: center, y: center },
+              { x: localQrCenterX, y: localQrCenterY },
               size / 2,
+              { x: localQrCenterX, y: localQrTop + 16 },
+              16,
               colors,
               null,
               0
@@ -207,8 +223,8 @@ export const useExportQrCodeImage = () => {
             break;
           default:
             shader = Skia.Shader.MakeLinearGradient(
-              { x: DefaultPadding, y: center },
-              { x: DefaultPadding + size, y: center },
+              { x: localQrLeft, y: localQrTop },
+              { x: localQrLeft + size, y: localQrTop + size },
               colors,
               null,
               0
@@ -222,10 +238,15 @@ export const useExportQrCodeImage = () => {
         const solidColor = colors[0] ?? Skia.Color('#000000');
         paint.setColor(solidColor as any);
       }
+      
       canvas.save();
       canvas.translate(DefaultPadding, DefaultPadding);
       canvas.drawPath(path, paint);
       canvas.restore();
+
+      // Logos are drawn *after* restore, in absolute canvas coordinates
+      const absQrCenterX = DefaultPadding + size / 2;
+      const absQrCenterY = DefaultPadding + size / 2;
 
       const drawImageToBase64 = async (src: string): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -250,8 +271,8 @@ export const useExportQrCodeImage = () => {
         });
       };
 
-      const fontSize = Math.round(38 * scaleFactor);
-      const emojiSize = Math.round(fontSize * 1.5);
+      const fontSize = Math.round(BasePreviewLogoFontSize * scaleFactor);
+      const emojiSize = Math.round(BasePreviewLogoVisualSize * scaleFactor);
 
       if (selectedLogo && selectedLogo.type === 'emoji') {
         const emojiValue = selectedLogo.value ?? '';
@@ -277,8 +298,8 @@ export const useExportQrCodeImage = () => {
             const skData = Skia.Data.fromBase64(base64);
             const emojiImage = Skia.Image.MakeImageFromEncoded(skData);
             if (emojiImage) {
-              const x = center - emojiSize / 2;
-              const y = center - emojiSize / 2;
+              const x = absQrCenterX - emojiSize / 2;
+              const y = absQrCenterY - emojiSize / 2;
               const paint = Skia.Paint();
               canvas.drawImageRect(emojiImage, Skia.XYWHRect(0, 0, emojiImage.width(), emojiImage.height()), Skia.XYWHRect(x, y, emojiSize, emojiSize), paint);
             }
@@ -292,8 +313,8 @@ export const useExportQrCodeImage = () => {
             const skData = Skia.Data.fromBase64(base64);
             const customImage = Skia.Image.MakeImageFromEncoded(skData);
             if (customImage) {
-              const x = center - emojiSize / 2;
-              const y = center - emojiSize / 2;
+              const x = absQrCenterX - emojiSize / 2;
+              const y = absQrCenterY - emojiSize / 2;
               const paint = Skia.Paint();
               canvas.drawImageRect(customImage, Skia.XYWHRect(0, 0, customImage.width(), customImage.height()), Skia.XYWHRect(x, y, emojiSize, emojiSize), paint);
             }
@@ -307,8 +328,8 @@ export const useExportQrCodeImage = () => {
           const skData = Skia.Data.fromBase64(base64);
           const customImage = Skia.Image.MakeImageFromEncoded(skData);
           if (customImage) {
-            const x = center - emojiSize / 2;
-            const y = center - emojiSize / 2;
+            const x = absQrCenterX - emojiSize / 2;
+            const y = absQrCenterY - emojiSize / 2;
             const paint = Skia.Paint();
             canvas.drawImageRect(customImage, Skia.XYWHRect(0, 0, customImage.width(), customImage.height()), Skia.XYWHRect(x, y, emojiSize, emojiSize), paint);
           }
@@ -326,9 +347,12 @@ export const useExportQrCodeImage = () => {
 
   const exportAsSvg = useCallback(
     (size: number) => {
-      const scaleFactor = size / 220; // Base size in UI is 220
-      // Consider logo size in UI is 70 for 220 QR size
-      const scaledLogoAreaSize = (selectedLogo && selectedLogo.type !== 'none') || customLogoUri ? 70 * scaleFactor : 0;
+      const scaleFactor = size / BasePreviewQrSize;
+      const scaledGap = gap * scaleFactor;
+      const scaledLogoAreaSize =
+        (selectedLogo && selectedLogo.type !== 'none') || customLogoUri
+          ? BasePreviewLogoAreaSize * scaleFactor
+          : 0;
       
       const value = qrUrl || ':)';
       const matrix = generateMatrix(value, 'H');
@@ -338,8 +362,8 @@ export const useExportQrCodeImage = () => {
         {
           shape: baseShape,
           eyePatternShape: eyePatternShape,
-          gap: gap,
-          eyePatternGap: gap,
+          gap: scaledGap,
+          eyePatternGap: scaledGap,
         },
         scaledLogoAreaSize
       );

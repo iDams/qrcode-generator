@@ -7,10 +7,10 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { ChevronIcon } from '../../icons';
-import { Colors } from '../../../design-tokens';
 import { TimingPresets } from '../../../animations';
 import { DropdownCloseContext, DropdownDirectionContext } from './context';
 import { styles } from './styles';
+import { usePanelTheme } from '../panel-theme';
 
 export { useDropdownClose, DropdownDirectionProvider } from './context';
 
@@ -26,6 +26,7 @@ export const HoverDropdown = ({
   label,
 }: HoverDropdownProps) => {
   const direction = useContext(DropdownDirectionContext);
+  const theme = usePanelTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [isTapOpen, setIsTapOpen] = useState(false);
   const animation = useSharedValue(0);
@@ -86,10 +87,21 @@ export const HoverDropdown = ({
         style={[
           styles.dropdown,
           direction === 'down' ? styles.dropdownDown : styles.dropdownUp,
+          {
+            shadowColor: theme.shadowColor,
+          },
           dropdownStyle,
         ]}
       >
-        <View style={styles.dropdownContent}>
+        <View
+          style={[
+            styles.dropdownContent,
+            {
+              backgroundColor: theme.dropdownBackground,
+              borderColor: theme.borderDropdown,
+            },
+          ]}
+        >
           <DropdownCloseContext.Provider value={closeFromChild}>
             {children}
           </DropdownCloseContext.Provider>
@@ -100,16 +112,24 @@ export const HoverDropdown = ({
         onPress={handlePress}
         onHoverIn={() => setIsHovered(true)}
         onHoverOut={() => setIsHovered(false)}
-        style={[styles.button, (isHovered || isOpen) && styles.buttonHovered]}
+        style={[
+          styles.button,
+          { backgroundColor: isHovered || isOpen ? theme.hoverBackground : 'transparent' },
+        ]}
       >
         {trigger}
         {label && (
-          <Text style={[styles.buttonText, (isHovered || isOpen) && styles.buttonTextHovered]}>
+          <Text
+            style={[
+              styles.buttonText,
+              { color: isHovered || isOpen ? theme.textHovered : theme.textMuted },
+            ]}
+          >
             {label}
           </Text>
         )}
         <Animated.View style={chevronStyle}>
-          <ChevronIcon color={isOpen ? Colors.iconHovered : Colors.iconMuted} />
+          <ChevronIcon color={isOpen ? theme.iconHovered : theme.iconMuted} />
         </Animated.View>
       </Pressable>
     </View>

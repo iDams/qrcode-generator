@@ -1,9 +1,9 @@
 import { ScrollViewStyleReset } from 'expo-router/html';
 import React from 'react';
 
-const SITE_URL = 'https://imarcodev.com';
-const TITLE = 'IMARCodev | Skia QR Code Generator';
-const DESCRIPTION = 'Generate beautiful, customizable QR codes with React Native Skia at IMARCodev. Features gradient colors, custom shapes, eye patterns, and logo support.';
+const SITE_URL = 'https://qrcode.imarcodev.com';
+const TITLE = 'IMarcoDev | Skia QR Code Generator';
+const DESCRIPTION = 'Generate beautiful, customizable QR codes with React Native Skia. Create unique gradients, custom shapes, eye patterns, and embedded logos in less than 30 seconds.';
 
 // This file is web-only and used to configure the root HTML for every
 // web page during static rendering.
@@ -23,8 +23,14 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
         {/* SEO */}
         <meta name="description" content={DESCRIPTION} />
-        <meta name="author" content="Enzo Manuel Mangano" />
+        <meta name="author" content="Marco" />
+        <meta name="keywords" content="QR code, generator, react native, skia, custom, gradient, svg, png" />
         <link rel="canonical" href={SITE_URL} />
+        
+        {/* Favicon */}
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
 
         {/* Open Graph */}
         <meta property="og:type" content="website" />

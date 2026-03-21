@@ -4,12 +4,8 @@ import { useSelector } from '@legendapp/state/react';
 import { qrcodeState$ } from '../../states';
 import { LinkIcon } from '../icons';
 import { HoverPressable } from '../hover-pressable';
-import {
-  Colors,
-  Spacing,
-  Sizes,
-  BorderRadius,
-} from '../../design-tokens';
+import { Spacing, Sizes, BorderRadius } from '../../design-tokens';
+import { usePanelTheme } from './panel-theme';
 
 interface URLButtonProps {
   onPress: () => void;
@@ -28,17 +24,23 @@ const truncateUrl = (url: string, maxLength: number = 20): string => {
 export const URLButton = ({ onPress }: URLButtonProps) => {
   const currentUrl = useSelector(qrcodeState$.qrUrl);
   const displayUrl = truncateUrl(currentUrl);
+  const theme = usePanelTheme();
 
   return (
     <HoverPressable
       style={styles.button}
-      hoverStyle={styles.buttonHovered}
+      hoverStyle={{ backgroundColor: theme.hoverBackground }}
       onPress={onPress}
     >
       {({ isHovered }) => (
         <>
-          <LinkIcon color={isHovered ? Colors.iconHovered : Colors.iconDefault} />
-          <Text style={[styles.buttonText, isHovered && styles.buttonTextHovered]}>
+          <LinkIcon color={isHovered ? theme.iconHovered : theme.iconDefault} />
+          <Text
+            style={[
+              styles.buttonText,
+              { color: isHovered ? theme.textHovered : theme.textMuted },
+            ]}
+          >
             {displayUrl}
           </Text>
         </>
@@ -57,14 +59,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   buttonHovered: {
-    backgroundColor: Colors.hoverBackground,
   },
   buttonText: {
-    color: Colors.textMuted,
     fontSize: 13,
     fontWeight: '500',
-  },
-  buttonTextHovered: {
-    color: Colors.textHovered,
   },
 });

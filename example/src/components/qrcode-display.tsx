@@ -13,7 +13,11 @@ import { useCopyQrCode } from './qrcode-copy-button/hooks/use-copy-qrcode';
 import { qrcodeState$ } from '../states';
 import { Colors, Sizes } from '../design-tokens';
 
-export const QRCodeDisplay = () => {
+interface QRCodeDisplayProps {
+  onReady?: () => void;
+}
+
+export const QRCodeDisplay = ({ onReady }: QRCodeDisplayProps) => {
   const copyQrCode = useCopyQrCode();
   const active = useSharedValue(false);
   const pageTheme = useSelector(qrcodeState$.pageTheme);
@@ -52,7 +56,12 @@ export const QRCodeDisplay = () => {
       <GestureDetector gesture={gestures}>
         <Animated.View style={animatedStyle}>
           <WithSkiaWeb
-            getComponent={() => import('./qrcode')}
+            getComponent={() =>
+              import('./qrcode').then((module) => {
+                onReady?.();
+                return module;
+              }) as never
+            }
             fallback={
               <View style={styles.loader}>
                 <ActivityIndicator size="small" color={loaderColor} />
