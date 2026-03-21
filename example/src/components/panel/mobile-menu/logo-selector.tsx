@@ -3,7 +3,15 @@ import { View, Text, Pressable, Alert } from 'react-native';
 import { PressableScale } from 'pressto';
 import * as Burnt from '../../../utils/toast';
 import { useSelector } from '@legendapp/state/react';
-import { qrcodeState$, LogoSamples, type SelectedLogo } from '../../../states';
+import {
+  qrcodeState$,
+  LogoSafeAreaOptions,
+  LogoSamples,
+  LogoSizeOptions,
+  type LogoSafeArea,
+  type LogoSize,
+  type SelectedLogo,
+} from '../../../states';
 import { Themes } from '../../../constants';
 import { styles } from './styles';
 import { Image } from 'expo-image';
@@ -17,6 +25,8 @@ const imageMap: Record<string, any> = {
 
 export const LogoSelector = () => {
   const selectedLogo = useSelector(qrcodeState$.selectedLogo);
+  const logoSize = useSelector(qrcodeState$.logoSize);
+  const logoSafeArea = useSelector(qrcodeState$.logoSafeArea);
   const customLogoUri = useSelector(qrcodeState$.customLogoUri);
   const currentTheme = useSelector(qrcodeState$.currentTheme);
   const themeColor = Themes[currentTheme].colors[0];
@@ -107,6 +117,110 @@ export const LogoSelector = () => {
       >
         <Text style={[styles.logoUploadText, { color: panelTheme.textPrimary }]}>Upload image</Text>
       </Pressable>
+      <View style={styles.logoSizeSection}>
+        <Text style={[styles.sectionTitle, { color: panelTheme.textMuted }]}>Size</Text>
+        <View
+          style={[
+            styles.logoSizeRow,
+            {
+              backgroundColor: panelTheme.buttonBackground,
+              borderColor: panelTheme.groupBorder,
+            },
+          ]}
+        >
+          {LogoSizeOptions.map((size) => (
+            <LogoSizeOption
+              key={size}
+              size={size}
+              isActive={logoSize === size}
+              activeColor={themeColor}
+              onPress={() => qrcodeState$.logoSize.set(size)}
+            />
+          ))}
+        </View>
+      </View>
+      <View style={styles.logoSizeSection}>
+        <Text style={[styles.sectionTitle, { color: panelTheme.textMuted }]}>Safe area</Text>
+        <View
+          style={[
+            styles.logoSizeRow,
+            {
+              backgroundColor: panelTheme.buttonBackground,
+              borderColor: panelTheme.groupBorder,
+            },
+          ]}
+        >
+          {LogoSafeAreaOptions.map((size) => (
+            <LogoSafeAreaOption
+              key={size}
+              size={size}
+              isActive={logoSafeArea === size}
+              activeColor={themeColor}
+              onPress={() => qrcodeState$.logoSafeArea.set(size)}
+            />
+          ))}
+        </View>
+      </View>
     </View>
+  );
+};
+
+type LogoSizeOptionProps = {
+  size: LogoSize;
+  isActive: boolean;
+  activeColor: string;
+  onPress: () => void;
+};
+
+const LogoSizeOption = ({ size, isActive, activeColor, onPress }: LogoSizeOptionProps) => {
+  return (
+    <PressableScale
+      onPress={onPress}
+      style={[
+        styles.logoSizeOption,
+        {
+          backgroundColor: isActive ? activeColor : 'transparent',
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.logoSizeText,
+          isActive && styles.logoSizeTextSelected,
+        ]}
+      >
+        {size}
+      </Text>
+    </PressableScale>
+  );
+};
+
+type LogoSafeAreaOptionProps = {
+  size: LogoSafeArea;
+  isActive: boolean;
+  activeColor: string;
+  onPress: () => void;
+};
+
+const LogoSafeAreaOption = ({ size, isActive, activeColor, onPress }: LogoSafeAreaOptionProps) => {
+  return (
+    <PressableScale
+      onPress={onPress}
+      style={[
+        styles.logoSizeOption,
+        {
+          backgroundColor: isActive ? activeColor : 'transparent',
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.logoSizeText,
+          isActive && styles.logoSizeTextSelected,
+        ]}
+      >
+        {size}
+      </Text>
+    </PressableScale>
   );
 };

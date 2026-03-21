@@ -1,42 +1,42 @@
 export const Themes = {
   mono: {
-    colors: ['#000000', '#000000', '#000000'],
+    colors: ['#333333', '#181818'],
   },
   Imarco: {
-    colors: ['#FFFFFF', '#BC002D', '#BC002D', '#FFC107'],
+    colors: ['#E74674', '#BC002D', '#7B1E3B'],
   },
   white: {
     colors: ['#FFFFFF', '#FFFFFF', '#FFFFFF'],
   },
   sand: {
-    colors: ['#F7E2C7', '#D8B07A', '#A16D3B'],
+    colors: ['#EED5B6', '#AF8856'],
   },
   forest: {
-    colors: ['#5F8F71', '#2F5D50', '#13392E'],
+    colors: ['#506853', '#213223'],
   },
   breeze: {
-    colors: ['#5CC8FF', '#A14DFF', '#FF69B4'],
+    colors: ['#CF2F98', '#6A3DEC'],
   },
   candy: {
-    colors: ['#A78BFA', '#F9A8D4', '#FDE68A'],
+    colors: ['#A58EFB', '#E9BFF8'],
   },
   crimson: {
-    colors: ['#FF6B6B', '#D63A5C', '#7A2E2E'],
+    colors: ['#FF6363', '#733434'],
   },
   falcon: {
-    colors: ['#C7E9F4', '#9FB8D1', '#4E587A'],
+    colors: ['#BDE3EC', '#363654'],
   },
   meadow: {
-    colors: ['#7EE081', '#A7D76E', '#3C8F54'],
+    colors: ['#59D499', '#A0872D'],
   },
   midnight: {
-    colors: ['#7CE7F2', '#4D8FD6', '#24304F'],
+    colors: ['#4CC8C8', '#202033'],
   },
   raindrop: {
-    colors: ['#9ED4FF', '#5B8CFF', '#53D4FF'],
+    colors: ['#8EC7FB', '#1C55AA'],
   },
   sunset: {
-    colors: ['#FFD27D', '#FF8A3D', '#E94E77'],
+    colors: ['#FFCF73', '#FF7A2F'],
   },
   aurora: {
     colors: ['#7AF5D6', '#7A8CFF', '#D66BFF'],

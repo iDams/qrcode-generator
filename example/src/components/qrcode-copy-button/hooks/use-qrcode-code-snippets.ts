@@ -5,11 +5,9 @@ import { Themes } from '../../../constants';
 import { generateMatrix } from '../../../../../src/qrcode/generate-matrix';
 import { transformMatrixIntoPath } from '../../../../../src/qrcode/transform-matrix-into-path';
 import { getSkiaGradientStringByType } from '../../../utils/gradient';
+import { getLogoSafeAreaSize, getLogoVisualMetrics } from '../../../utils/logo-metrics';
 
 const PREVIEW_QR_SIZE = 260;
-const PREVIEW_LOGO_AREA_SIZE = 80;
-const PREVIEW_LOGO_VISUAL_SIZE = 58;
-const PREVIEW_LOGO_FONT_SIZE = 42;
 
 const escapeTemplate = (value: string) =>
   value.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
@@ -37,7 +35,11 @@ export const useQrCodeCodeSnippets = () => {
       : Themes[currentThemeName];
   const isSolidTheme = currentThemeName === 'mono' || currentThemeName === 'white';
   const selectedLogo = useSelector(qrcodeState$.selectedLogo);
+  const logoSize = useSelector(qrcodeState$.logoSize);
+  const logoSafeArea = useSelector(qrcodeState$.logoSafeArea);
   const customLogoUri = useSelector(qrcodeState$.customLogoUri);
+  const logoMetrics = getLogoVisualMetrics(logoSize, true);
+  const logoAreaSize = getLogoSafeAreaSize(logoSafeArea, true);
 
   const getSvgMarkup = useCallback(
     (size: number = PREVIEW_QR_SIZE) => {
@@ -46,7 +48,7 @@ export const useQrCodeCodeSnippets = () => {
       const scaledGap = gap * scaleFactor;
       const scaledLogoAreaSize =
         (selectedLogo && selectedLogo.type !== 'none') || customLogoUri
-          ? PREVIEW_LOGO_AREA_SIZE * scaleFactor
+          ? logoAreaSize * scaleFactor
           : 0;
       const matrix = generateMatrix(value, 'H');
       const pathData = transformMatrixIntoPath(
@@ -104,12 +106,12 @@ export const useQrCodeCodeSnippets = () => {
       }
 
       let logoSvg = '';
-      const logoSize = Math.round(PREVIEW_LOGO_VISUAL_SIZE * scaleFactor);
+      const renderedLogoSize = Math.round(logoMetrics.visual * scaleFactor);
       if (selectedLogo?.type === 'emoji' && selectedLogo.value) {
-        const fontSize = Math.round(PREVIEW_LOGO_FONT_SIZE * scaleFactor);
+        const fontSize = Math.round(logoMetrics.font * scaleFactor);
         logoSvg = `<text x="${size / 2}" y="${size / 2}" font-size="${fontSize}" text-anchor="middle" dominant-baseline="central">${escapeXml(selectedLogo.value)}</text>`;
       } else if (selectedLogo?.type === 'custom' && customLogoUri) {
-        logoSvg = `<image x="${size / 2 - logoSize / 2}" y="${size / 2 - logoSize / 2}" width="${logoSize}" height="${logoSize}" href="${customLogoUri}" preserveAspectRatio="xMidYMid meet"/>`;
+        logoSvg = `<image x="${size / 2 - renderedLogoSize / 2}" y="${size / 2 - renderedLogoSize / 2}" width="${renderedLogoSize}" height="${renderedLogoSize}" href="${customLogoUri}" preserveAspectRatio="xMidYMid meet"/>`;
       }
 
       return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
@@ -125,6 +127,9 @@ export const useQrCodeCodeSnippets = () => {
       gap,
       selectedLogo,
       customLogoUri,
+      logoMetrics.font,
+      logoMetrics.visual,
+      logoAreaSize,
       baseShape,
       eyePatternShape,
       theme.colors,
@@ -174,25 +179,25 @@ export const useQrCodeCodeSnippets = () => {
       if (customLogoUri) {
         return `
       logo={
-        <View style={{ height: ${PREVIEW_LOGO_VISUAL_SIZE}, aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ height: ${logoMetrics.visual}, aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Image
             source={{ uri: \`${escapeTemplate(customLogoUri)}\` }}
-            style={{ width: ${PREVIEW_LOGO_VISUAL_SIZE}, height: ${PREVIEW_LOGO_VISUAL_SIZE} }}
+            style={{ width: ${logoMetrics.visual}, height: ${logoMetrics.visual} }}
             contentFit="contain"
           />
         </View>
       }
-      logoAreaSize={${PREVIEW_LOGO_AREA_SIZE}}`;
+      logoAreaSize={${logoAreaSize}}`;
       }
 
       if (selectedLogo?.type === 'emoji' && selectedLogo.value) {
         return `
       logo={
-        <View style={{ height: ${PREVIEW_LOGO_VISUAL_SIZE}, aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontSize: ${PREVIEW_LOGO_FONT_SIZE} }}>${selectedLogo.value}</Text>
+        <View style={{ height: ${logoMetrics.visual}, aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: ${logoMetrics.font} }}>${selectedLogo.value}</Text>
         </View>
       }
-      logoAreaSize={${PREVIEW_LOGO_AREA_SIZE}}`;
+      logoAreaSize={${logoAreaSize}}`;
       }
 
       return '';
@@ -213,8 +218,8 @@ export const useQrCodeCodeSnippets = () => {
   return (
     <QRCode
       value="${escapeTemplate(qrUrl || ':)')}"
-      size={${PREVIEW_QR_SIZE}}
-      color="${colors[0] ?? '#000000'}"
+      size={${PREVIEW_QR_SIZE}}${isSolidTheme ? `
+      color="${colors[0] ?? '#000000'}"` : ''}
       shapeOptions={{
         shape: '${baseShape}',
         eyePatternShape: '${eyePatternShape}',
@@ -234,6 +239,9 @@ export const useQrCodeCodeSnippets = () => {
 ${opening}${gradientSnippet}${closing}`;
   }, [
     theme.colors,
+    logoMetrics.font,
+    logoMetrics.visual,
+    logoAreaSize,
     customLogoUri,
     selectedLogo,
     qrUrl,

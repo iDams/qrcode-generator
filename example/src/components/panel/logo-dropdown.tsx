@@ -2,7 +2,16 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, Pressable, View, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from '@legendapp/state/react';
-import { qrcodeState$, LogoSamples, type LogoSample, type SelectedLogo } from '../../states';
+import {
+  qrcodeState$,
+  LogoSafeAreaOptions,
+  LogoSamples,
+  LogoSizeOptions,
+  type LogoSample,
+  type LogoSafeArea,
+  type LogoSize,
+  type SelectedLogo,
+} from '../../states';
 import { HoverDropdown, useDropdownClose } from './hover-dropdown';
 import { Spacing } from '../../design-tokens';
 import { Image } from 'expo-image';
@@ -11,6 +20,8 @@ import { usePanelTheme } from './panel-theme';
 
 export const LogoDropdown = () => {
   const selectedLogo = useSelector(qrcodeState$.selectedLogo);
+  const logoSize = useSelector(qrcodeState$.logoSize);
+  const logoSafeArea = useSelector(qrcodeState$.logoSafeArea);
   const customLogoUri = useSelector(qrcodeState$.customLogoUri);
   const [isUploadHovered, setIsUploadHovered] = useState(false);
   const theme = usePanelTheme();
@@ -92,6 +103,33 @@ export const LogoDropdown = () => {
         />
         <Text style={[styles.optionText, { color: theme.textPrimary }]}>Upload image</Text>
       </Pressable>
+      <View style={styles.divider} />
+      <View style={styles.sizeSection}>
+        <Text style={[styles.sizeLabel, { color: theme.textMuted }]}>Logo size</Text>
+        <View style={[styles.sizeSelector, { backgroundColor: theme.buttonBackground }]}>
+          {LogoSizeOptions.map((size) => (
+            <LogoSizeButton
+              key={size}
+              size={size}
+              isActive={logoSize === size}
+              onPress={() => qrcodeState$.logoSize.set(size)}
+            />
+          ))}
+        </View>
+      </View>
+      <View style={styles.sizeSection}>
+        <Text style={[styles.sizeLabel, { color: theme.textMuted }]}>Safe area</Text>
+        <View style={[styles.sizeSelector, { backgroundColor: theme.buttonBackground }]}>
+          {LogoSafeAreaOptions.map((size) => (
+            <LogoSafeAreaButton
+              key={size}
+              size={size}
+              isActive={logoSafeArea === size}
+              onPress={() => qrcodeState$.logoSafeArea.set(size)}
+            />
+          ))}
+        </View>
+      </View>
     </HoverDropdown>
   );
 };
@@ -142,6 +180,86 @@ const LogoOption = ({ logo, isSelected, onSelect }: LogoOptionProps) => {
   );
 };
 
+type LogoSizeButtonProps = {
+  size: LogoSize;
+  isActive: boolean;
+  onPress: () => void;
+};
+
+const LogoSizeButton = ({ size, isActive, onPress }: LogoSizeButtonProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const theme = usePanelTheme();
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onHoverIn={() => setIsHovered(true)}
+      onHoverOut={() => setIsHovered(false)}
+      style={[
+        styles.sizeButton,
+        {
+          backgroundColor: isActive
+            ? theme.activeBackground
+            : isHovered
+              ? theme.hoverBackground
+              : 'transparent',
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.sizeButtonText,
+          {
+            color: isActive ? theme.textPrimary : theme.textSubtle,
+          },
+        ]}
+      >
+        {size}
+      </Text>
+    </Pressable>
+  );
+};
+
+type LogoSafeAreaButtonProps = {
+  size: LogoSafeArea;
+  isActive: boolean;
+  onPress: () => void;
+};
+
+const LogoSafeAreaButton = ({ size, isActive, onPress }: LogoSafeAreaButtonProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const theme = usePanelTheme();
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onHoverIn={() => setIsHovered(true)}
+      onHoverOut={() => setIsHovered(false)}
+      style={[
+        styles.sizeButton,
+        {
+          backgroundColor: isActive
+            ? theme.activeBackground
+            : isHovered
+              ? theme.hoverBackground
+              : 'transparent',
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.sizeButtonText,
+          {
+            color: isActive ? theme.textPrimary : theme.textSubtle,
+          },
+        ]}
+      >
+        {size}
+      </Text>
+    </Pressable>
+  );
+};
+
 const styles = StyleSheet.create({
   triggerContainer: {
     minWidth: 30,
@@ -183,5 +301,36 @@ const styles = StyleSheet.create({
   uploadIcon: {
     width: 20,
     textAlign: 'center',
+  },
+  sizeSection: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  sizeLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  sizeSelector: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    borderRadius: 10,
+    padding: 3,
+  },
+  sizeButton: {
+    minWidth: 38,
+    height: 28,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sizeButtonText: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
 });

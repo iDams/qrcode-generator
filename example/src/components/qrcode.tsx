@@ -4,6 +4,7 @@ import { useSelector } from '@legendapp/state/react';
 import { qrcodeState$, GapValues } from '../states';
 import { Themes } from '../constants';
 import { getSkiaGradientByType } from '../utils/gradient';
+import { getLogoSafeAreaSize, getLogoVisualMetrics } from '../utils/logo-metrics';
 import { StyleSheet, Text, Platform, Image } from 'react-native';
 import { SvgUri } from 'react-native-svg';
 import Animated, {
@@ -16,9 +17,6 @@ import { isEmbedded } from '../hooks/use-embedded';
 const isWeb = Platform.OS === 'web';
 const isDesktopWeb = isWeb && !isEmbedded;
 const QRCodeSize = isDesktopWeb ? 260 : 220;
-const LogoAreaSize = isDesktopWeb ? 80 : 70;
-const LogoHeight = isDesktopWeb ? 58 : 50;
-const LogoFontSize = isDesktopWeb ? 42 : 38;
 
 const SPRING_CONFIG = {
   mass: 1,
@@ -26,7 +24,15 @@ const SPRING_CONFIG = {
   damping: 12,
 } as const;
 
-const AnimatedLogoEmoji = ({ emoji }: { emoji: string }) => {
+const AnimatedLogoEmoji = ({
+  emoji,
+  visualSize,
+  fontSize,
+}: {
+  emoji: string;
+  visualSize: number;
+  fontSize: number;
+}) => {
   const copyTrigger = useSelector(qrcodeState$.copyTrigger);
   const rotation = useSharedValue(0);
   const initialTrigger = React.useRef(copyTrigger);
@@ -43,13 +49,19 @@ const AnimatedLogoEmoji = ({ emoji }: { emoji: string }) => {
   }));
 
   return (
-    <Animated.View style={[styles.logo, animatedStyle]}>
-      <Text style={styles.logoLabel}>{emoji}</Text>
+    <Animated.View style={[styles.logo, { height: visualSize }, animatedStyle]}>
+      <Text style={[styles.logoLabel, { fontSize }]}>{emoji}</Text>
     </Animated.View>
   );
 };
 
-const AnimatedLogoImage = ({ source }: { source: any }) => {
+const AnimatedLogoImage = ({
+  source,
+  visualSize,
+}: {
+  source: any;
+  visualSize: number;
+}) => {
   const copyTrigger = useSelector(qrcodeState$.copyTrigger);
   const scale = useSharedValue(1);
   const initialTrigger = React.useRef(copyTrigger);
@@ -75,11 +87,15 @@ const AnimatedLogoImage = ({ source }: { source: any }) => {
     typeof sourceUri === 'string' && sourceUri.startsWith('data:image/svg+xml');
 
   return (
-    <Animated.View style={[styles.logo, animatedStyle]}>
+    <Animated.View style={[styles.logo, { height: visualSize }, animatedStyle]}>
       {isSvgDataUri ? (
-        <SvgUri uri={sourceUri} width={LogoHeight} height={LogoHeight} />
+        <SvgUri uri={sourceUri} width={visualSize} height={visualSize} />
       ) : (
-        <Image source={source} style={styles.logoImage} resizeMode="contain" />
+        <Image
+          source={source}
+          style={[styles.logoImage, { width: visualSize, height: visualSize }]}
+          resizeMode="contain"
+        />
       )}
     </Animated.View>
   );
@@ -88,13 +104,21 @@ const AnimatedLogoImage = ({ source }: { source: any }) => {
 const LogoContent = () => {
   const selectedLogo = useSelector(qrcodeState$.selectedLogo);
   const customLogoUri = useSelector(qrcodeState$.customLogoUri);
+  const logoSize = useSelector(qrcodeState$.logoSize);
+  const metrics = getLogoVisualMetrics(logoSize, isDesktopWeb);
 
   if (customLogoUri) {
-    return <AnimatedLogoImage source={{ uri: customLogoUri }} />;
+    return <AnimatedLogoImage source={{ uri: customLogoUri }} visualSize={metrics.visual} />;
   }
 
   if (selectedLogo.type === 'emoji') {
-    return <AnimatedLogoEmoji emoji={selectedLogo.value} />;
+    return (
+      <AnimatedLogoEmoji
+        emoji={selectedLogo.value}
+        visualSize={metrics.visual}
+        fontSize={metrics.font}
+      />
+    );
   }
 
   return null;
@@ -127,8 +151,10 @@ function QRCodeDemo() {
   );
 
   const selectedLogo = useSelector(qrcodeState$.selectedLogo);
+  const logoSafeArea = useSelector(qrcodeState$.logoSafeArea);
   const customLogoUri = useSelector(qrcodeState$.customLogoUri);
   const hasLogo = customLogoUri || (selectedLogo.type !== 'none' && selectedLogo.value);
+  const logoAreaSize = getLogoSafeAreaSize(logoSafeArea, isDesktopWeb);
 
   const logoProps = useMemo(() => {
     if (!hasLogo) {
@@ -136,9 +162,9 @@ function QRCodeDemo() {
     }
     return {
       logo: <LogoContent />,
-      logoAreaSize: LogoAreaSize,
+      logoAreaSize,
     };
-  }, [hasLogo]);
+  }, [hasLogo, logoAreaSize]);
 
   return (
     <Animated.View
@@ -147,7 +173,7 @@ function QRCodeDemo() {
       <QRCode
         value={qrUrl || ':)'}
         size={QRCodeSize}
-        color={theme.colors[0]}
+        {...(isSolidTheme ? { color: theme.colors[0] } : {})}
         shapeOptions={{
           shape: baseShape,
           gap: gap,
@@ -164,17 +190,13 @@ function QRCodeDemo() {
 
 const styles = StyleSheet.create({
   logo: {
-    height: LogoHeight,
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   logoLabel: {
-    fontSize: LogoFontSize,
   },
   logoImage: {
-    width: LogoHeight,
-    height: LogoHeight,
   },
   frame: {
     alignSelf: 'center',

@@ -197,9 +197,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.sm,
     gap: Spacing.sm,
-    shadowOpacity: 0.24,
-    shadowRadius: 32,
-    shadowOffset: { width: 0, height: 16 },
   },
   mobilePanel: {
     height: 56,

@@ -146,8 +146,8 @@ export const ThemeDropdown = () => {
               borderColor: theme.borderDropdown,
               shadowColor: theme.shadowColor,
               boxShadow: theme.isDark
-                ? '0 22px 48px rgba(0,0,0,0.32)'
-                : '0 22px 48px rgba(60, 40, 20, 0.14)',
+                ? '0 12px 24px rgba(0,0,0,0.22)'
+                : '0 12px 24px rgba(60, 40, 20, 0.10)',
             },
           ]}
         >

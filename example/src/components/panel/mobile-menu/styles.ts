@@ -187,6 +187,33 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  logoSizeSection: {
+    marginTop: Spacing.md,
+  },
+  logoSizeRow: {
+    flexDirection: 'row',
+    borderRadius: BorderRadius.md,
+    padding: 3,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+  },
+  logoSizeOption: {
+    minWidth: 42,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoSizeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textSubtle,
+    textTransform: 'uppercase',
+  },
+  logoSizeTextSelected: {
+    color: '#2F2F2F',
+  },
   logoEmoji: {
     fontSize: 22,
     color: Colors.textPrimary,

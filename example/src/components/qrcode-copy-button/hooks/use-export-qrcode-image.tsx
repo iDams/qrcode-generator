@@ -5,14 +5,12 @@ import { Skia } from '@shopify/react-native-skia';
 import * as Burnt from '../../../utils/toast';
 import { qrcodeState$, GapValues } from '../../../states';
 import { Themes } from '../../../constants';
+import { getLogoSafeAreaSize, getLogoVisualMetrics } from '../../../utils/logo-metrics';
 import { generateMatrix } from '../../../../../src/qrcode/generate-matrix';
 import { transformMatrixIntoPath } from '../../../../../src/qrcode/transform-matrix-into-path';
 
 const DefaultPadding = 128;
 const BasePreviewQrSize = 260;
-const BasePreviewLogoAreaSize = 80;
-const BasePreviewLogoVisualSize = 58;
-const BasePreviewLogoFontSize = 42;
 
 const imageMap: Record<string, any> = {
   'github-logo': require('../../../../assets/images/github-logo.png'),
@@ -31,6 +29,8 @@ export const useExportQrCodeImage = () => {
   const theme = currentThemeName === 'custom' ? { colors: customColors.filter((c): c is string => !!c) } : Themes[currentThemeName];
   const isSolidTheme = currentThemeName === 'mono' || currentThemeName === 'white';
   const selectedLogo = useSelector(qrcodeState$.selectedLogo);
+  const logoSize = useSelector(qrcodeState$.logoSize);
+  const logoSafeArea = useSelector(qrcodeState$.logoSafeArea);
   const customLogoUri = useSelector(qrcodeState$.customLogoUri);
   const exportFormat = useSelector(qrcodeState$.exportFormat);
   const exportSize = useSelector(qrcodeState$.exportSize);
@@ -44,7 +44,8 @@ export const useExportQrCodeImage = () => {
       const logoCenter = center;
       const colors = theme.colors;
       const scaleFactor = size / BasePreviewQrSize;
-      const logoSize = Math.round(BasePreviewLogoVisualSize * scaleFactor);
+      const logoMetrics = getLogoVisualMetrics(logoSize, true);
+      const renderedLogoSize = Math.round(logoMetrics.visual * scaleFactor);
       const gradientId = getGradientId(gradientType);
 
       let gradientDef = '';
@@ -105,14 +106,14 @@ export const useExportQrCodeImage = () => {
   </g>
 </svg>`;
         }
-        const fontSize = Math.round(BasePreviewLogoFontSize * scaleFactor);
+        const fontSize = Math.round(logoMetrics.font * scaleFactor);
         logoSvg = `<text x="${logoCenter}" y="${logoCenter}" font-size="${fontSize}" text-anchor="middle" dominant-baseline="central">${emojiValue}</text>`;
       } else if (selectedLogo && selectedLogo.type === 'image' && selectedLogo.value && imageMap[selectedLogo.value]) {
         // Image logo - use image element with embedded data URI fallback
-        logoSvg = `<image x="${logoCenter - logoSize/2}" y="${logoCenter - logoSize/2}" width="${logoSize}" height="${logoSize}" href="${imageMap[selectedLogo.value]}" preserveAspectRatio="xMidYMid meet"/>`;
+        logoSvg = `<image x="${logoCenter - renderedLogoSize/2}" y="${logoCenter - renderedLogoSize/2}" width="${renderedLogoSize}" height="${renderedLogoSize}" href="${imageMap[selectedLogo.value]}" preserveAspectRatio="xMidYMid meet"/>`;
       } else if (selectedLogo && selectedLogo.type === 'custom' && customLogoUri) {
         // Custom URI logo (from upload)
-        logoSvg = `<image x="${logoCenter - logoSize/2}" y="${logoCenter - logoSize/2}" width="${logoSize}" height="${logoSize}" href="${customLogoUri}" preserveAspectRatio="xMidYMid meet"/>`;
+        logoSvg = `<image x="${logoCenter - renderedLogoSize/2}" y="${logoCenter - renderedLogoSize/2}" width="${renderedLogoSize}" height="${renderedLogoSize}" href="${customLogoUri}" preserveAspectRatio="xMidYMid meet"/>`;
       }
 
       return `<?xml version="1.0" encoding="UTF-8"?>
@@ -125,7 +126,7 @@ export const useExportQrCodeImage = () => {
   ${logoSvg}
 </svg>`;
     },
-    [gradientType, theme.colors, selectedLogo, customLogoUri]
+    [gradientType, theme.colors, selectedLogo, customLogoUri, logoSize]
   );
 
   const exportAsPng = useCallback(
@@ -142,12 +143,14 @@ export const useExportQrCodeImage = () => {
 
       const value = qrUrl || ':)';
       const matrix = generateMatrix(value, 'H');
+      const logoMetrics = getLogoVisualMetrics(logoSize, true);
+      const logoAreaSize = getLogoSafeAreaSize(logoSafeArea, true);
       // Logo UI base scale logic to compute scaled logo area size
       const scaleFactor = size / BasePreviewQrSize;
       const scaledGap = gap * scaleFactor;
       const scaledLogoAreaSize =
         (selectedLogo && selectedLogo.type !== 'none') || customLogoUri
-          ? BasePreviewLogoAreaSize * scaleFactor
+          ? logoAreaSize * scaleFactor
           : 0;
       
       const pathData = transformMatrixIntoPath(
@@ -271,8 +274,8 @@ export const useExportQrCodeImage = () => {
         });
       };
 
-      const fontSize = Math.round(BasePreviewLogoFontSize * scaleFactor);
-      const emojiSize = Math.round(BasePreviewLogoVisualSize * scaleFactor);
+      const fontSize = Math.round(logoMetrics.font * scaleFactor);
+      const emojiSize = Math.round(logoMetrics.visual * scaleFactor);
 
       if (selectedLogo && selectedLogo.type === 'emoji') {
         const emojiValue = selectedLogo.value ?? '';
@@ -342,16 +345,17 @@ export const useExportQrCodeImage = () => {
       const data = image.encodeToBase64();
       return `data:image/png;base64,${data}`;
     },
-    [qrUrl, baseShape, eyePatternShape, gap, gradientType, theme.colors, selectedLogo]
+    [qrUrl, baseShape, eyePatternShape, gap, gradientType, theme.colors, selectedLogo, customLogoUri, logoSize, logoSafeArea]
   );
 
   const exportAsSvg = useCallback(
     (size: number) => {
       const scaleFactor = size / BasePreviewQrSize;
+      const logoAreaSize = getLogoSafeAreaSize(logoSafeArea, true);
       const scaledGap = gap * scaleFactor;
       const scaledLogoAreaSize =
         (selectedLogo && selectedLogo.type !== 'none') || customLogoUri
-          ? BasePreviewLogoAreaSize * scaleFactor
+          ? logoAreaSize * scaleFactor
           : 0;
       
       const value = qrUrl || ':)';
@@ -369,7 +373,7 @@ export const useExportQrCodeImage = () => {
       );
       return createSvgContent(size, DefaultPadding, pathData.path);
     },
-    [qrUrl, baseShape, eyePatternShape, gap, createSvgContent, selectedLogo, customLogoUri]
+    [qrUrl, baseShape, eyePatternShape, gap, createSvgContent, selectedLogo, customLogoUri, logoSize, logoSafeArea]
   );
 
   const exportQrCodeImage = useCallback(async () => {
