@@ -53,7 +53,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         */}
         <ScrollViewStyleReset />
 
-        {/* Using raw CSS styles as an escape-hatch to ensure the background color never flickers in dark-mode. */}
+        {/* Using raw CSS styles as an escape-hatch to ensure the background color never flickers on first paint. */}
         <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
       </head>
       <body>{children}</body>
@@ -63,16 +63,16 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
 const responsiveBackground = `
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 html, body {
-  background-color: #000000;
+  background-color: #F6F4EF;
   margin: 0;
   padding: 0;
   overflow: hidden;
 }
 #root {
-  background-color: #000000;
+  background-color: #F6F4EF;
   position: fixed;
   top: 0;
   left: 0;
@@ -88,7 +88,7 @@ html::before {
   left: -9999px;
   right: -9999px;
   bottom: -9999px;
-  background-color: #000000;
+  background-color: #F6F4EF;
   z-index: -1;
 }
 `;

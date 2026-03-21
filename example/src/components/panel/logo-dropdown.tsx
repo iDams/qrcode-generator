@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, Pressable, View, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from '@legendapp/state/react';
 import { qrcodeState$, LogoSamples, type LogoSample, type SelectedLogo } from '../../states';
 import { HoverDropdown, useDropdownClose } from './hover-dropdown';
@@ -83,7 +84,12 @@ export const LogoDropdown = () => {
           { backgroundColor: isUploadHovered ? theme.hoverBackground : 'transparent' },
         ]}
       >
-        <Text style={[styles.uploadIcon, { color: theme.textPrimary }]}>📁</Text>
+        <Ionicons
+          name="cloud-upload-outline"
+          size={16}
+          color={theme.textPrimary}
+          style={styles.uploadIcon}
+        />
         <Text style={[styles.optionText, { color: theme.textPrimary }]}>Upload image</Text>
       </Pressable>
     </HoverDropdown>
@@ -175,7 +181,6 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
   },
   uploadIcon: {
-    fontSize: 16,
     width: 20,
     textAlign: 'center',
   },

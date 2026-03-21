@@ -2,14 +2,12 @@ import React from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { useSelector } from '@legendapp/state/react';
 import { WithSkiaWeb } from '@shopify/react-native-skia/lib/module/web';
-import { useCopyQrCode } from './qrcode-copy-button/hooks/use-copy-qrcode';
 import { qrcodeState$ } from '../states';
 import { Colors, Sizes } from '../design-tokens';
 
@@ -18,7 +16,6 @@ interface QRCodeDisplayProps {
 }
 
 export const QRCodeDisplay = ({ onReady }: QRCodeDisplayProps) => {
-  const copyQrCode = useCopyQrCode();
   const active = useSharedValue(false);
   const pageTheme = useSelector(qrcodeState$.pageTheme);
   const isDark = pageTheme === 'dark';
@@ -28,9 +25,6 @@ export const QRCodeDisplay = ({ onReady }: QRCodeDisplayProps) => {
     .maxDuration(4000)
     .onTouchesDown(() => {
       active.value = true;
-    })
-    .onTouchesUp(() => {
-      runOnJS(copyQrCode)();
     })
     .onFinalize(() => {
       active.value = false;

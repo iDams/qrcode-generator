@@ -2,44 +2,66 @@ import React, { useCallback } from 'react';
 import * as Burnt from '../../../utils/toast';
 import { Platform } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { useGetActiveQrCodeString } from './use-active-qrcode-string';
 import { Image } from 'expo-image';
 import { qrcodeState$ } from '../../../states';
+import { useQrCodeCodeSnippets } from './use-qrcode-code-snippets';
 
 const GitHubMark = require('../../../../assets/images/github-mark.png');
 
 const IconStyle = { width: 18, height: 18 };
 
+export type CopyQrCodeMode = 'react-native-skia' | 'svg' | 'html-embed';
+
 export const useCopyQrCode = () => {
-  const getActiveQrCodeString = useGetActiveQrCodeString();
+  const { getReactNativeSkiaSnippet, getSvgMarkup, getHtmlEmbedSnippet } =
+    useQrCodeCodeSnippets();
 
-  const copyQrCode = useCallback(() => {
-    Clipboard.setStringAsync(getActiveQrCodeString());
+  const copyQrCode = useCallback(
+    (mode: CopyQrCodeMode = 'react-native-skia') => {
+      const payload =
+        mode === 'svg'
+          ? getSvgMarkup()
+          : mode === 'html-embed'
+            ? getHtmlEmbedSnippet()
+            : getReactNativeSkiaSnippet();
 
-    // Trigger logo spin animation
-    qrcodeState$.copyTrigger.set((prev) => prev + 1);
+      Clipboard.setStringAsync(payload);
+      qrcodeState$.copyTrigger.set((prev) => prev + 1);
 
-    if (Platform.OS === 'web') {
-      // Burnt will fallback to Sonner on Web
-      return Burnt.toast({
-        title: 'QRCode Copied',
-        message: "Don't forget to leave a star on GitHub!",
-        duration: 2,
-        shouldDismissByDrag: true,
-        preset: 'custom',
-        haptic: 'success',
-        icon: {
-          ios: {
-            name: 'star.fill',
-            color: '#000000',
+      if (Platform.OS === 'web') {
+        const title =
+          mode === 'svg'
+            ? 'SVG copied'
+            : mode === 'html-embed'
+              ? 'HTML embed copied'
+              : 'React Native / Skia copied';
+
+        return Burnt.toast({
+          title,
+          message: "Don't forget to leave a star on GitHub!",
+          duration: 2,
+          shouldDismissByDrag: true,
+          preset: 'custom',
+          haptic: 'success',
+          icon: {
+            ios: {
+              name: 'star.fill',
+              color: '#000000',
+            },
+            web: (
+              <Image
+                source={GitHubMark}
+                tintColor="#FFFFFF"
+                style={IconStyle}
+                contentFit="contain"
+              />
+            ),
           },
-          web: (
-            <Image source={GitHubMark} tintColor="#FFFFFF" style={IconStyle} contentFit="contain" />
-          ),
-        },
-      });
-    }
-  }, [getActiveQrCodeString]);
+        });
+      }
+    },
+    [getReactNativeSkiaSnippet, getSvgMarkup, getHtmlEmbedSnippet]
+  );
 
   return copyQrCode;
 };
