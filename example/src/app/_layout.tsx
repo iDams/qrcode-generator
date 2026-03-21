@@ -10,7 +10,8 @@ import { Slot } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Toaster } from '../utils/toast';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Colors } from '../design-tokens';
+import { useSelector } from '@legendapp/state/react';
+import { qrcodeState$ } from '../states';
 
 // Lazy load Agentation only on web in development (optional dependency)
 const useAgentation = () => {
@@ -35,14 +36,16 @@ const useAgentation = () => {
 
 export default function RootLayout() {
   const Agentation = useAgentation();
+  const pageTheme = useSelector(qrcodeState$.pageTheme);
+  const isDark = pageTheme === 'dark';
 
   return (
-    <SafeAreaProvider style={styles.fill}>
+    <SafeAreaProvider style={[styles.fill, isDark ? styles.dark : styles.light]}>
       {Agentation && <Agentation />}
-      <GestureHandlerRootView style={styles.fill}>
+      <GestureHandlerRootView style={[styles.fill, isDark ? styles.dark : styles.light]}>
         <Slot />
       </GestureHandlerRootView>
-      {Platform.OS === 'web' && <Toaster position="top-center" theme="dark" />}
+      {Platform.OS === 'web' && <Toaster position="top-center" theme={isDark ? 'dark' : 'light'} />}
     </SafeAreaProvider>
   );
 }
@@ -50,6 +53,11 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   fill: {
     flex: 1,
-    backgroundColor: Colors.background,
+  },
+  dark: {
+    backgroundColor: '#000000',
+  },
+  light: {
+    backgroundColor: '#F6F4EF',
   },
 });

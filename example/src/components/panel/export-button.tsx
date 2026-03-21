@@ -22,7 +22,7 @@ export const ExportButton = () => {
       onPress={copyQrCode}
     >
       <LinearGradient
-        colors={[theme.colors[0], theme.colors[1]]}
+        colors={theme.colors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}

@@ -5,6 +5,7 @@ import { qrcodeState$, GapValues } from '../states';
 import { Themes } from '../constants';
 import { getSkiaGradientByType } from '../utils/gradient';
 import { StyleSheet, Text, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -25,7 +26,12 @@ const SPRING_CONFIG = {
   damping: 12,
 } as const;
 
-const AnimatedLogo = ({ emoji }: { emoji: string }) => {
+const imageMap: Record<string, any> = {
+  'github-logo': require('../../assets/images/github-logo.png'),
+  'github-mark': require('../../assets/images/github-mark.png'),
+};
+
+const AnimatedLogoEmoji = ({ emoji }: { emoji: string }) => {
   const copyTrigger = useSelector(qrcodeState$.copyTrigger);
   const rotation = useSharedValue(0);
   const initialTrigger = React.useRef(copyTrigger);
@@ -33,7 +39,6 @@ const AnimatedLogo = ({ emoji }: { emoji: string }) => {
   useEffect(() => {
     const diff = copyTrigger - initialTrigger.current;
     if (diff > 0) {
-      // Only animate for triggers since mount
       rotation.value = withSpring(diff * 360, SPRING_CONFIG);
     }
   }, [copyTrigger, rotation]);
@@ -49,6 +54,50 @@ const AnimatedLogo = ({ emoji }: { emoji: string }) => {
   );
 };
 
+const AnimatedLogoImage = ({ source }: { source: any }) => {
+  const copyTrigger = useSelector(qrcodeState$.copyTrigger);
+  const scale = useSharedValue(1);
+  const initialTrigger = React.useRef(copyTrigger);
+
+  useEffect(() => {
+    const diff = copyTrigger - initialTrigger.current;
+    if (diff > 0) {
+      scale.value = withSpring(1.2, SPRING_CONFIG, () => {
+        scale.value = withSpring(1, SPRING_CONFIG);
+      });
+    }
+  }, [copyTrigger, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={[styles.logo, animatedStyle]}>
+      <Image source={source} style={styles.logoImage} contentFit="contain" />
+    </Animated.View>
+  );
+};
+
+const LogoContent = () => {
+  const selectedLogo = useSelector(qrcodeState$.selectedLogo);
+  const customLogoUri = useSelector(qrcodeState$.customLogoUri);
+
+  if (customLogoUri) {
+    return <AnimatedLogoImage source={{ uri: customLogoUri }} />;
+  }
+
+  if (selectedLogo.type === 'emoji') {
+    return <AnimatedLogoEmoji emoji={selectedLogo.value} />;
+  }
+
+  if (selectedLogo.type === 'image' && imageMap[selectedLogo.value]) {
+    return <AnimatedLogoImage source={imageMap[selectedLogo.value]} />;
+  }
+
+  return null;
+};
+
 function QRCodeDemo() {
   const qrUrl = useSelector(qrcodeState$.qrUrl);
   const baseShape = useSelector(qrcodeState$.baseShape);
@@ -57,43 +106,57 @@ function QRCodeDemo() {
   const gap = GapValues[gapSize];
   const gradientType = useSelector(qrcodeState$.selectedGradient);
   const currentThemeName = useSelector(qrcodeState$.currentTheme);
-  const theme = Themes[currentThemeName];
+  const customColors = useSelector(qrcodeState$.customColors);
+  const theme = currentThemeName === 'custom' ? { colors: customColors } : Themes[currentThemeName];
+  const isSolidTheme = currentThemeName === 'mono' || currentThemeName === 'white';
 
   const gradientComponent = useMemo(
-    () =>
-      getSkiaGradientByType({
+    () => {
+      if (isSolidTheme) {
+        return null;
+      }
+      return getSkiaGradientByType({
         gradient: gradientType,
-        colors: [...theme.colors],
+        colors: [...theme.colors].filter((c): c is string => c !== undefined),
         size: QRCodeSize,
-      }),
-    [gradientType, theme.colors]
+      });
+    },
+    [gradientType, theme.colors, isSolidTheme]
   );
 
   const selectedLogo = useSelector(qrcodeState$.selectedLogo);
+  const customLogoUri = useSelector(qrcodeState$.customLogoUri);
+  const hasLogo = customLogoUri || (selectedLogo.type !== 'none' && selectedLogo.value);
+
   const logoProps = useMemo(() => {
-    if (!selectedLogo) {
+    if (!hasLogo) {
       return {};
     }
     return {
-      logo: <AnimatedLogo emoji={selectedLogo} />,
+      logo: <LogoContent />,
       logoAreaSize: LogoAreaSize,
     };
-  }, [selectedLogo]);
+  }, [hasLogo]);
 
   return (
-    <QRCode
-      value={qrUrl || ':)'}
-      size={QRCodeSize}
-      shapeOptions={{
-        shape: baseShape,
-        gap: gap,
-        eyePatternGap: gap,
-        eyePatternShape: eyePatternShape,
-      }}
-      {...logoProps}
+    <Animated.View
+      style={styles.frame}
     >
-      {gradientComponent}
-    </QRCode>
+      <QRCode
+        value={qrUrl || ':)'}
+        size={QRCodeSize}
+        color={theme.colors[0]}
+        shapeOptions={{
+          shape: baseShape,
+          gap: gap,
+          eyePatternGap: gap,
+          eyePatternShape: eyePatternShape,
+        }}
+        {...logoProps}
+      >
+        {gradientComponent}
+      </QRCode>
+    </Animated.View>
   );
 }
 
@@ -106,6 +169,13 @@ const styles = StyleSheet.create({
   },
   logoLabel: {
     fontSize: LogoFontSize,
+  },
+  logoImage: {
+    width: LogoHeight,
+    height: LogoHeight,
+  },
+  frame: {
+    alignSelf: 'center',
   },
 });
 

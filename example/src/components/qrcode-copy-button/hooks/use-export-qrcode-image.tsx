@@ -5,15 +5,15 @@ import { Skia } from '@shopify/react-native-skia';
 import * as Burnt from '../../../utils/toast';
 import { qrcodeState$, GapValues } from '../../../states';
 import { Themes } from '../../../constants';
-// Using relative path to library source
 import { generateMatrix } from '../../../../../src/qrcode/generate-matrix';
 import { transformMatrixIntoPath } from '../../../../../src/qrcode/transform-matrix-into-path';
 
-const ExportSize = 1024;
-const Padding = 128;
+const DefaultPadding = 128;
 
-const LogoAreaSize = 70; // Same as in qrcode.tsx
-const LogoExportScale = ExportSize / 220; // Scale factor from display size to export size
+const imageMap: Record<string, string> = {
+  'github-logo': 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
+  'github-mark': 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
+};
 
 export const useExportQrCodeImage = () => {
   const qrUrl = useSelector(qrcodeState$.qrUrl);
@@ -23,35 +23,126 @@ export const useExportQrCodeImage = () => {
   const gap = GapValues[gapSize];
   const gradientType = useSelector(qrcodeState$.selectedGradient);
   const currentThemeName = useSelector(qrcodeState$.currentTheme);
-  const theme = Themes[currentThemeName];
+  const customColors = useSelector(qrcodeState$.customColors);
+  const theme = currentThemeName === 'custom' ? { colors: customColors.filter((c): c is string => !!c) } : Themes[currentThemeName];
+  const isSolidTheme = currentThemeName === 'mono' || currentThemeName === 'white';
   const selectedLogo = useSelector(qrcodeState$.selectedLogo);
+  const customLogoUri = useSelector(qrcodeState$.customLogoUri);
+  const exportFormat = useSelector(qrcodeState$.exportFormat);
+  const exportSize = useSelector(qrcodeState$.exportSize);
 
-  const exportQrCodeImage = useCallback(() => {
-    if (Platform.OS !== 'web') {
-      return;
-    }
+  const getGradientId = (type: string) => `qr-gradient-${type}`;
 
-    try {
-      const totalSize = ExportSize + Padding * 2;
+  const createSvgContent = useCallback(
+    (size: number, padding: number, pathData: string) => {
+      const totalSize = size + padding * 2;
+      const center = totalSize / 2;
+      const logoCenter = center;
+      const colors = theme.colors;
+      const logoSize = Math.round(38 * (size / 220) * 1.5);
 
-      // Create offscreen surface
+      let gradientDef = '';
+      let gradientFill = '';
+
+      if (isSolidTheme) {
+        gradientFill = colors[0]!;
+      } else {
+        const stops = colors.map((c, i) => `<stop offset="${Math.round((i / (colors.length - 1)) * 100)}%" stop-color="${c}"/>`).join('\n              ');
+        switch (gradientType) {
+          case 'radial':
+            gradientDef = `<radialGradient id="${getGradientId(gradientType)}" cx="50%" cy="50%" r="50%">
+              ${stops}
+            </radialGradient>`;
+            gradientFill = `url(#${getGradientId(gradientType)})`;
+            break;
+          case 'linear':
+            gradientDef = `<linearGradient id="${getGradientId(gradientType)}" x1="0%" y1="0%" x2="100%" y2="0%">
+              ${stops}
+            </linearGradient>`;
+            gradientFill = `url(#${getGradientId(gradientType)})`;
+            break;
+          case 'linear-vertical':
+            gradientDef = `<linearGradient id="${getGradientId(gradientType)}" x1="0%" y1="0%" x2="0%" y2="100%">
+              ${stops}
+            </linearGradient>`;
+            gradientFill = `url(#${getGradientId(gradientType)})`;
+            break;
+          case 'sweep':
+            gradientDef = `<linearGradient id="${getGradientId(gradientType)}" x1="0%" y1="0%" x2="100%" y2="100%">
+              ${stops}
+            </linearGradient>`;
+            gradientFill = `url(#${getGradientId(gradientType)})`;
+            break;
+          case 'conical':
+            gradientDef = `<linearGradient id="${getGradientId(gradientType)}" x1="0%" y1="0%" x2="100%" y2="100%">
+              ${stops}
+            </linearGradient>`;
+            gradientFill = `url(#${getGradientId(gradientType)})`;
+            break;
+          default:
+            gradientFill = colors[0]!;
+        }
+      }
+
+      let logoSvg = '';
+      
+      if (selectedLogo && selectedLogo.type === 'emoji') {
+        // Emoji logo - use text element
+        const emojiValue = selectedLogo.value ?? '';
+        if (!emojiValue) {
+          return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${totalSize}" height="${totalSize}" viewBox="0 0 ${totalSize} ${totalSize}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>${gradientDef}</defs>
+  <rect width="${totalSize}" height="${totalSize}" fill="transparent"/>
+  <g transform="translate(${padding}, ${padding})">
+    <path d="${pathData}" fill="${gradientFill}"/>
+  </g>
+</svg>`;
+        }
+        const fontSize = Math.round(38 * (size / 220));
+        logoSvg = `<text x="${logoCenter}" y="${logoCenter}" font-size="${fontSize}" text-anchor="middle" dominant-baseline="central">${emojiValue}</text>`;
+      } else if (selectedLogo && selectedLogo.type === 'image' && selectedLogo.value && imageMap[selectedLogo.value]) {
+        // Image logo - use image element with embedded data URI fallback
+        logoSvg = `<image x="${logoCenter - logoSize/2}" y="${logoCenter - logoSize/2}" width="${logoSize}" height="${logoSize}" href="${imageMap[selectedLogo.value]}" preserveAspectRatio="xMidYMid meet"/>`;
+      } else if (selectedLogo && selectedLogo.type === 'custom' && customLogoUri) {
+        // Custom URI logo (from upload)
+        logoSvg = `<image x="${logoCenter - logoSize/2}" y="${logoCenter - logoSize/2}" width="${logoSize}" height="${logoSize}" href="${customLogoUri}" preserveAspectRatio="xMidYMid meet"/>`;
+      }
+
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${totalSize}" height="${totalSize}" viewBox="0 0 ${totalSize} ${totalSize}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>${gradientDef}</defs>
+  <rect width="${totalSize}" height="${totalSize}" fill="transparent"/>
+  <g transform="translate(${padding}, ${padding})">
+    <path d="${pathData}" fill="${gradientFill}"/>
+  </g>
+  ${logoSvg}
+</svg>`;
+    },
+    [gradientType, theme.colors, selectedLogo]
+  );
+
+  const exportAsPng = useCallback(
+    async (size: number) => {
+      const totalSize = size + DefaultPadding * 2;
+
       const surface = Skia.Surface.MakeOffscreen(totalSize, totalSize);
       if (!surface) {
         throw new Error('Could not create offscreen surface');
       }
 
       const canvas = surface.getCanvas();
-
-      // Clear to transparent
       canvas.clear(Skia.Color('transparent'));
 
-      // Generate QR code path
       const value = qrUrl || ':)';
       const matrix = generateMatrix(value, 'H');
-      const scaledLogoAreaSize = selectedLogo ? LogoAreaSize * LogoExportScale : 0;
+      // Logo UI base scale logic to compute scaled logo area size
+      const scaleFactor = size / 220; 
+      const scaledLogoAreaSize = (selectedLogo && selectedLogo.type !== 'none') || customLogoUri ? 70 * scaleFactor : 0;
+      
       const pathData = transformMatrixIntoPath(
         matrix,
-        ExportSize,
+        size,
         {
           shape: baseShape,
           eyePatternShape: eyePatternShape,
@@ -66,123 +157,224 @@ export const useExportQrCodeImage = () => {
         throw new Error('Could not create path');
       }
 
-      // Create gradient paint
       const paint = Skia.Paint();
-      const colors = theme.colors.map((c: string) => Skia.Color(c));
+      const colors = (theme.colors as string[]).filter(Boolean).map((c: string) => Skia.Color(c));
       const center = totalSize / 2;
 
       let shader;
-      switch (gradientType) {
-        case 'radial':
-          shader = Skia.Shader.MakeRadialGradient(
-            { x: center, y: center },
-            ExportSize / 2,
-            colors,
-            null,
-            0
-          );
-          break;
-        case 'linear':
-          shader = Skia.Shader.MakeLinearGradient(
-            { x: Padding, y: center },
-            { x: Padding + ExportSize, y: center },
-            colors,
-            null,
-            0
-          );
-          break;
-        case 'linear-vertical':
-          shader = Skia.Shader.MakeLinearGradient(
-            { x: center, y: Padding },
-            { x: center, y: Padding + ExportSize },
-            colors,
-            null,
-            0
-          );
-          break;
-        case 'sweep':
-          shader = Skia.Shader.MakeSweepGradient(center, center, colors, null, 0);
-          break;
-        case 'conical':
-          shader = Skia.Shader.MakeTwoPointConicalGradient(
-            { x: center, y: center },
-            0,
-            { x: center, y: center },
-            ExportSize / 2,
-            colors,
-            null,
-            0
-          );
-          break;
-        default:
-          shader = Skia.Shader.MakeLinearGradient(
-            { x: Padding, y: center },
-            { x: Padding + ExportSize, y: center },
-            colors,
-            null,
-            0
-          );
-      }
-
-      paint.setShader(shader);
-
-      // Draw QR code with padding offset
-      canvas.save();
-      canvas.translate(Padding, Padding);
-      canvas.drawPath(path, paint);
-      canvas.restore();
-
-      // Draw logo emoji if selected (using 2D canvas workaround for web)
-      if (selectedLogo) {
-        const fontSize = Math.round(38 * LogoExportScale);
-        const emojiSize = Math.round(fontSize * 1.2);
-
-        // Create a temporary 2D canvas to render the emoji
-        // @ts-ignore - DOM API for web
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = emojiSize;
-        tempCanvas.height = emojiSize;
-        // @ts-ignore
-        const tempCtx = tempCanvas.getContext('2d');
-        if (tempCtx) {
-          // @ts-ignore
-          tempCtx.font = `${fontSize}px sans-serif`;
-          // @ts-ignore
-          tempCtx.textAlign = 'center';
-          // @ts-ignore
-          tempCtx.textBaseline = 'middle';
-          // @ts-ignore
-          tempCtx.fillText(selectedLogo, emojiSize / 2, emojiSize / 2);
-
-          // Convert to data URL and create Skia image
-          // @ts-ignore
-          const dataUrl = tempCanvas.toDataURL('image/png');
-          const base64 = dataUrl.split(',')[1];
-          const skData = Skia.Data.fromBase64(base64);
-          const emojiImage = Skia.Image.MakeImageFromEncoded(skData);
-
-          if (emojiImage) {
-            const x = center - emojiSize / 2;
-            const y = center - emojiSize / 2;
-            canvas.drawImage(emojiImage, x, y);
-          }
+      if (!isSolidTheme) {
+        switch (gradientType) {
+          case 'radial':
+            shader = Skia.Shader.MakeRadialGradient(
+              { x: center, y: center },
+              size / 2,
+              colors,
+              null,
+              0
+            );
+            break;
+          case 'linear':
+            shader = Skia.Shader.MakeLinearGradient(
+              { x: DefaultPadding, y: center },
+              { x: DefaultPadding + size, y: center },
+              colors,
+              null,
+              0
+            );
+            break;
+          case 'linear-vertical':
+            shader = Skia.Shader.MakeLinearGradient(
+              { x: center, y: DefaultPadding },
+              { x: center, y: DefaultPadding + size },
+              colors,
+              null,
+              0
+            );
+            break;
+          case 'sweep':
+            shader = Skia.Shader.MakeSweepGradient(center, center, colors, null, 0);
+            break;
+          case 'conical':
+            shader = Skia.Shader.MakeTwoPointConicalGradient(
+              { x: center, y: center },
+              0,
+              { x: center, y: center },
+              size / 2,
+              colors,
+              null,
+              0
+            );
+            break;
+          default:
+            shader = Skia.Shader.MakeLinearGradient(
+              { x: DefaultPadding, y: center },
+              { x: DefaultPadding + size, y: center },
+              colors,
+              null,
+              0
+            );
         }
       }
 
-      // Get image snapshot and encode
+      if (shader) {
+        paint.setShader(shader);
+      } else {
+        const solidColor = colors[0] ?? Skia.Color('#000000');
+        paint.setColor(solidColor as any);
+      }
+      canvas.save();
+      canvas.translate(DefaultPadding, DefaultPadding);
+      canvas.drawPath(path, paint);
+      canvas.restore();
+
+      const drawImageToBase64 = async (src: string): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          // @ts-ignore
+          const img = new Image();
+          img.crossOrigin = 'Anonymous';
+          img.onload = () => {
+            // @ts-ignore
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+            const ctx = tempCanvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              resolve(tempCanvas.toDataURL('image/png').split(',')[1]);
+            } else {
+              reject(new Error('Failed to get canvas context'));
+            }
+          };
+          img.onerror = reject;
+          img.src = src;
+        });
+      };
+
+      const fontSize = Math.round(38 * scaleFactor);
+      const emojiSize = Math.round(fontSize * 1.5);
+
+      if (selectedLogo && selectedLogo.type === 'emoji') {
+        const emojiValue = selectedLogo.value ?? '';
+        if (emojiValue) {
+          // @ts-ignore - DOM API for web
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = emojiSize;
+          tempCanvas.height = emojiSize;
+          // @ts-ignore
+          const tempCtx = tempCanvas.getContext('2d');
+          if (tempCtx) {
+            // @ts-ignore
+            tempCtx.font = `${fontSize}px sans-serif`;
+            // @ts-ignore
+            tempCtx.textAlign = 'center';
+            // @ts-ignore
+            tempCtx.textBaseline = 'middle';
+            // @ts-ignore
+            tempCtx.fillText(emojiValue, emojiSize / 2, emojiSize / 2);
+            // @ts-ignore
+            const dataUrl = tempCanvas.toDataURL('image/png');
+            const base64 = dataUrl.split(',')[1];
+            const skData = Skia.Data.fromBase64(base64);
+            const emojiImage = Skia.Image.MakeImageFromEncoded(skData);
+            if (emojiImage) {
+              const x = center - emojiSize / 2;
+              const y = center - emojiSize / 2;
+              const paint = Skia.Paint();
+              canvas.drawImageRect(emojiImage, Skia.XYWHRect(0, 0, emojiImage.width(), emojiImage.height()), Skia.XYWHRect(x, y, emojiSize, emojiSize), paint);
+            }
+          }
+        }
+      } else if (selectedLogo && selectedLogo.type === 'image') {
+        const imageLogoValue = selectedLogo.value ?? '';
+        if (imageLogoValue && imageMap[imageLogoValue]) {
+          try {
+            const base64 = await drawImageToBase64(imageMap[imageLogoValue]!);
+            const skData = Skia.Data.fromBase64(base64);
+            const customImage = Skia.Image.MakeImageFromEncoded(skData);
+            if (customImage) {
+              const x = center - emojiSize / 2;
+              const y = center - emojiSize / 2;
+              const paint = Skia.Paint();
+              canvas.drawImageRect(customImage, Skia.XYWHRect(0, 0, customImage.width(), customImage.height()), Skia.XYWHRect(x, y, emojiSize, emojiSize), paint);
+            }
+          } catch (e) {
+            console.warn('Failed to load image logo', e);
+          }
+        }
+      } else if (selectedLogo && selectedLogo.type === 'custom' && customLogoUri) {
+        try {
+          const base64 = await drawImageToBase64(customLogoUri!);
+          const skData = Skia.Data.fromBase64(base64);
+          const customImage = Skia.Image.MakeImageFromEncoded(skData);
+          if (customImage) {
+            const x = center - emojiSize / 2;
+            const y = center - emojiSize / 2;
+            const paint = Skia.Paint();
+            canvas.drawImageRect(customImage, Skia.XYWHRect(0, 0, customImage.width(), customImage.height()), Skia.XYWHRect(x, y, emojiSize, emojiSize), paint);
+          }
+        } catch (e) {
+          console.warn('Failed to load custom logo', e);
+        }
+      }
+
       const image = surface.makeImageSnapshot();
       const data = image.encodeToBase64();
+      return `data:image/png;base64,${data}`;
+    },
+    [qrUrl, baseShape, eyePatternShape, gap, gradientType, theme.colors, selectedLogo]
+  );
 
-      // Trigger download
+  const exportAsSvg = useCallback(
+    (size: number) => {
+      const scaleFactor = size / 220; // Base size in UI is 220
+      // Consider logo size in UI is 70 for 220 QR size
+      const scaledLogoAreaSize = (selectedLogo && selectedLogo.type !== 'none') || customLogoUri ? 70 * scaleFactor : 0;
+      
+      const value = qrUrl || ':)';
+      const matrix = generateMatrix(value, 'H');
+      const pathData = transformMatrixIntoPath(
+        matrix,
+        size,
+        {
+          shape: baseShape,
+          eyePatternShape: eyePatternShape,
+          gap: gap,
+          eyePatternGap: gap,
+        },
+        scaledLogoAreaSize
+      );
+      return createSvgContent(size, DefaultPadding, pathData.path);
+    },
+    [qrUrl, baseShape, eyePatternShape, gap, createSvgContent, selectedLogo, customLogoUri]
+  );
+
+  const exportQrCodeImage = useCallback(async () => {
+    if (Platform.OS !== 'web') {
+      return;
+    }
+
+    try {
+      const size = exportSize || 1024;
+      let dataUrl: string;
+      let filename: string;
+
+      if (exportFormat === 'svg') {
+        dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(exportAsSvg(size));
+        filename = 'qrcode.svg';
+      } else {
+        dataUrl = await exportAsPng(size);
+        filename = 'qrcode.png';
+      }
+
       // @ts-ignore - DOM API for web
       const link = document.createElement('a');
-      link.href = `data:image/png;base64,${data}`;
-      link.download = 'qrcode.png';
+      link.href = dataUrl;
+      link.download = filename;
       link.click();
 
       Burnt.toast({
         title: 'QR Code Exported',
-        message: 'Image saved to downloads',
+        message: `${filename.toUpperCase()} ${size}px`,
         preset: 'done',
         duration: 2,
       });
@@ -195,7 +387,7 @@ export const useExportQrCodeImage = () => {
         duration: 2,
       });
     }
-  }, [qrUrl, baseShape, eyePatternShape, gap, gradientType, theme.colors, selectedLogo]);
+  }, [exportFormat, exportSize, exportAsPng, exportAsSvg]);
 
   return exportQrCodeImage;
 };

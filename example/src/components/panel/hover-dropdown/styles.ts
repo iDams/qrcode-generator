@@ -45,11 +45,9 @@ export const styles = StyleSheet.create({
   },
   dropdownUp: {
     bottom: '100%',
-    marginBottom: Spacing.md,
   },
   dropdownDown: {
     top: '100%',
-    marginTop: Spacing.md,
   },
   dropdownContent: {
     backgroundColor: Colors.dropdownBackground,

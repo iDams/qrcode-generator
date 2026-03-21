@@ -89,6 +89,10 @@ export const styles = StyleSheet.create({
     fontSize: 22,
     color: Colors.textPrimary,
   },
+  logoImage: {
+    width: 28,
+    height: 28,
+  },
   gapRow: {
     flexDirection: 'row',
     backgroundColor: Colors.buttonBackground,

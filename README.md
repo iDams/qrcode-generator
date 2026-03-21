@@ -4,7 +4,7 @@ React Native QRCode Skia 🎨
 
 A lightweight and high-performance QR code generator component for React Native, powered by Skia rendering engine. 
 
-Generate your **QR Code** in less than 30 seconds using [qrcode.reactiive.io](https://qrcode.reactiive.io).
+Generate your **QR Code** in less than 30 seconds using [imarcodev.com](https://imarcodev.com).
 
 https://github.com/user-attachments/assets/c3b69c77-e4ca-40ee-a554-7b1f13fbe9df
 
@@ -32,7 +32,7 @@ import QRCode from 'react-native-qrcode-skia';
 const App = () => {
   return (
     <QRCode
-      value="https://qrcode.reactiive.io"
+      value="https://imarcodev.com"
       size={200}
     />
   );
@@ -49,7 +49,7 @@ import QRCode from 'react-native-qrcode-skia';
 const App = () => {
   return (
     <QRCode
-      value="https://qrcode.reactiive.io"
+      value="https://imarcodev.com"
       size={200}
       shapeOptions={{
         shape: "circle",

@@ -14,11 +14,15 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
+import { useSelector } from '@legendapp/state/react';
 
 import { Panel } from './panel';
 import { QRCodeDisplay } from './qrcode-display';
 import { URLInputModal } from './url-input-modal';
+import { CustomColorModal } from './custom-color-modal';
 import { Colors } from '../design-tokens';
+import { qrcodeState$ } from '../states';
+import { PageThemeToggle } from './page-theme-toggle';
 
 const DRAWER_MAX_HEIGHT_PERCENT = 0.7;
 
@@ -26,6 +30,21 @@ export default function App() {
   const { height: windowHeight } = useWindowDimensions();
   const [isURLModalVisible, setIsURLModalVisible] = useState(false);
   const drawerProgress = useSharedValue(0);
+  const pageTheme = useSelector(qrcodeState$.pageTheme);
+  const isDark = pageTheme === 'dark';
+  const loaderColor = isDark ? Colors.loaderColor : 'rgba(0,0,0,0.35)';
+
+  useEffect(() => {
+    const webDocument = (globalThis as { document?: any }).document;
+    if (!webDocument) {
+      return;
+    }
+
+    const backgroundColor = isDark ? '#000000' : '#F6F4EF';
+    webDocument.documentElement.style.backgroundColor = backgroundColor;
+    webDocument.body.style.backgroundColor = backgroundColor;
+    webDocument.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+  }, [isDark]);
 
   const handleURLButtonPress = useCallback(() => {
     setIsURLModalVisible(true);
@@ -49,8 +68,8 @@ export default function App() {
   });
 
   useEffect(() => {
-    // @ts-ignore - document is available on web
-    if (typeof document !== 'undefined') {
+    const webDocument = (globalThis as { document?: any }).document;
+    if (webDocument) {
       const handleKeyDown = (e: {
         key: string;
         metaKey: boolean;
@@ -62,22 +81,23 @@ export default function App() {
           setIsURLModalVisible((prev) => !prev);
         }
       };
-      // @ts-ignore - document is available on web
-      document.addEventListener('keydown', handleKeyDown, true);
-      // @ts-ignore - document is available on web
-      return () => document.removeEventListener('keydown', handleKeyDown, true);
+      webDocument.addEventListener('keydown', handleKeyDown, true);
+      return () => webDocument.removeEventListener('keydown', handleKeyDown, true);
     }
     return undefined;
   }, []);
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="auto" />
+    <View style={[styles.container, isDark ? styles.dark : styles.light]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <View style={styles.topRight}>
+        <PageThemeToggle />
+      </View>
       <Animated.View style={[styles.content, contentAnimatedStyle]}>
         <React.Suspense
           fallback={
             <View style={styles.loader}>
-              <ActivityIndicator size="large" color={Colors.loaderColor} />
+              <ActivityIndicator size="large" color={loaderColor} />
             </View>
           }
         >
@@ -92,6 +112,7 @@ export default function App() {
         visible={isURLModalVisible}
         onClose={handleURLModalClose}
       />
+      <CustomColorModal />
     </View>
   );
 }
@@ -99,12 +120,23 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+  },
+  dark: {
+    backgroundColor: '#000000',
+  },
+  light: {
+    backgroundColor: '#F6F4EF',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  topRight: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 300,
   },
   loader: {
     width: 320,

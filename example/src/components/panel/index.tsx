@@ -15,8 +15,7 @@ import { GapSelector } from './gap-selector';
 import { ThemeDropdown } from './theme-dropdown';
 import { GradientSelector } from './gradient-selector';
 import { LogoDropdown } from './logo-dropdown';
-import { ExportButton } from './export-button';
-import { ImageExportButton } from './image-export-button';
+import { ExportDropdown } from './export-dropdown';
 import { URLButton } from './url-button';
 import { MobileMenu } from './mobile-menu';
 import { GitHubIcon, MenuIcon } from '../icons';
@@ -24,7 +23,6 @@ import { HoverPressable } from '../hover-pressable';
 import { useResponsive } from '../../hooks/use-responsive';
 import { isEmbedded } from '../../hooks/use-embedded';
 import { qrcodeState$ } from '../../states';
-import { FeatureFlags } from '../../constants';
 import { Colors, Spacing, Sizes, BorderRadius } from '../../design-tokens';
 
 const Separator = () => <View style={styles.separator} />;
@@ -101,8 +99,7 @@ export const Panel = ({ onURLButtonPress, drawerProgress }: PanelProps) => {
             </HoverPressable>
             <URLButton onPress={onURLButtonPress} />
             <View style={styles.mobileActions}>
-              {FeatureFlags.ENABLE_IMAGE_EXPORT && <ImageExportButton />}
-              <ExportButton />
+              <ExportDropdown />
               <GitHubButton />
             </View>
           </View>
@@ -137,8 +134,7 @@ export const Panel = ({ onURLButtonPress, drawerProgress }: PanelProps) => {
           <LogoDropdown />
         </View>
         <View style={styles.actions}>
-          {FeatureFlags.ENABLE_IMAGE_EXPORT && <ImageExportButton />}
-          <ExportButton />
+          <ExportDropdown />
           <GitHubButton />
         </View>
       </View>

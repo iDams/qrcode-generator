@@ -1,9 +1,9 @@
 import { ScrollViewStyleReset } from 'expo-router/html';
 import React from 'react';
 
-const SITE_URL = 'https://qrcode.reactiive.io';
-const TITLE = 'Skia QR Code Generator';
-const DESCRIPTION = 'Generate beautiful, customizable QR codes with React Native Skia. Features gradient colors, custom shapes, eye patterns, and logo support.';
+const SITE_URL = 'https://imarcodev.com';
+const TITLE = 'IMARCodev | Skia QR Code Generator';
+const DESCRIPTION = 'Generate beautiful, customizable QR codes with React Native Skia at IMARCodev. Features gradient colors, custom shapes, eye patterns, and logo support.';
 
 // This file is web-only and used to configure the root HTML for every
 // web page during static rendering.

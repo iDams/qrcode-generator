@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import type { ReactNode } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import Animated, {
@@ -27,50 +27,18 @@ export const HoverDropdown = ({
 }: HoverDropdownProps) => {
   const direction = useContext(DropdownDirectionContext);
   const [isHovered, setIsHovered] = useState(false);
-  const [isDropdownHovered, setIsDropdownHovered] = useState(false);
   const [isTapOpen, setIsTapOpen] = useState(false);
   const animation = useSharedValue(0);
-  const closeTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const isOpen = isHovered || isDropdownHovered || isTapOpen;
+  const isOpen = isTapOpen;
 
   const openDropdown = useCallback(() => {
-    if (closeTimeout.current) {
-      clearTimeout(closeTimeout.current);
-      closeTimeout.current = null;
-    }
     animation.value = withTiming(1, TimingPresets.dropdown);
   }, [animation]);
 
   const closeDropdown = useCallback(() => {
-    closeTimeout.current = setTimeout(() => {
-      animation.value = withTiming(0, TimingPresets.dropdownClose);
-    }, 30);
+    animation.value = withTiming(0, TimingPresets.dropdownClose);
   }, [animation]);
-
-  const handleButtonHoverIn = () => {
-    setIsHovered(true);
-    openDropdown();
-  };
-
-  const handleButtonHoverOut = () => {
-    setIsHovered(false);
-    if (!isDropdownHovered && !isTapOpen) {
-      closeDropdown();
-    }
-  };
-
-  const handleDropdownHoverIn = () => {
-    setIsDropdownHovered(true);
-    openDropdown();
-  };
-
-  const handleDropdownHoverOut = () => {
-    setIsDropdownHovered(false);
-    if (!isHovered && !isTapOpen) {
-      closeDropdown();
-    }
-  };
 
   const handlePress = () => {
     if (isTapOpen) {
@@ -84,17 +52,13 @@ export const HoverDropdown = ({
 
   const handleBackdropPress = () => {
     setIsTapOpen(false);
-    setIsHovered(false);
-    setIsDropdownHovered(false);
-    animation.value = withTiming(0, TimingPresets.dropdownClose);
+    closeDropdown();
   };
 
   const closeFromChild = useCallback(() => {
     setIsTapOpen(false);
-    setIsHovered(false);
-    setIsDropdownHovered(false);
-    animation.value = withTiming(0, TimingPresets.dropdownClose);
-  }, [animation]);
+    closeDropdown();
+  }, [closeDropdown]);
 
   const dropdownStyle = useAnimatedStyle(() => {
     const translateDirection = direction === 'up' ? 1 : -1;
@@ -124,8 +88,6 @@ export const HoverDropdown = ({
           direction === 'down' ? styles.dropdownDown : styles.dropdownUp,
           dropdownStyle,
         ]}
-        onPointerEnter={handleDropdownHoverIn}
-        onPointerLeave={handleDropdownHoverOut}
       >
         <View style={styles.dropdownContent}>
           <DropdownCloseContext.Provider value={closeFromChild}>
@@ -136,13 +98,13 @@ export const HoverDropdown = ({
 
       <Pressable
         onPress={handlePress}
-        onHoverIn={handleButtonHoverIn}
-        onHoverOut={handleButtonHoverOut}
-        style={[styles.button, isOpen && styles.buttonHovered]}
+        onHoverIn={() => setIsHovered(true)}
+        onHoverOut={() => setIsHovered(false)}
+        style={[styles.button, (isHovered || isOpen) && styles.buttonHovered]}
       >
         {trigger}
         {label && (
-          <Text style={[styles.buttonText, isOpen && styles.buttonTextHovered]}>
+          <Text style={[styles.buttonText, (isHovered || isOpen) && styles.buttonTextHovered]}>
             {label}
           </Text>
         )}

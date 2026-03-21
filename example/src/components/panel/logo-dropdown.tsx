@@ -1,48 +1,118 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, Pressable } from 'react-native';
+import { StyleSheet, Text, Pressable, View, Alert } from 'react-native';
 import { useSelector } from '@legendapp/state/react';
-import { qrcodeState$, LogoEmojis } from '../../states';
+import { qrcodeState$, LogoSamples, type LogoSample, type SelectedLogo } from '../../states';
 import { HoverDropdown, useDropdownClose } from './hover-dropdown';
 import { Colors, Spacing } from '../../design-tokens';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 
-const LogoLabels: Record<string, string> = {
-  '': 'none',
-  '\uD83D\uDC36': 'dog',
-  '\uD83D\uDC30': 'bunny',
-  '\uD83E\uDD8A': 'fox',
-  '\uD83D\uDC3C': 'panda',
-  '\uD83D\uDC28': 'koala',
+const LogoImage = ({ logoId, size = 20 }: { logoId: string; size?: number }) => {
+  const imageMap: Record<string, any> = {
+    'github-logo': require('../../../assets/images/github-logo.png'),
+    'github-mark': require('../../../assets/images/github-mark.png'),
+  };
+
+  const source = imageMap[logoId];
+  if (!source) return null;
+
+  return (
+    <Image
+      source={source}
+      style={{ width: size, height: size }}
+      contentFit="contain"
+    />
+  );
 };
 
 export const LogoDropdown = () => {
   const selectedLogo = useSelector(qrcodeState$.selectedLogo);
+  const customLogoUri = useSelector(qrcodeState$.customLogoUri);
+  const [isUploadHovered, setIsUploadHovered] = useState(false);
+
+  const currentDisplay = () => {
+    if (customLogoUri) {
+      return <Image source={{ uri: customLogoUri }} style={styles.customLogoPreview} contentFit="contain" />;
+    }
+    if (selectedLogo.type === 'emoji') {
+      return <Text style={styles.triggerEmoji}>{selectedLogo.value || '—'}</Text>;
+    }
+    if (selectedLogo.type === 'image') {
+      return <LogoImage logoId={selectedLogo.value} size={20} />;
+    }
+    return <Text style={styles.triggerEmoji}>—</Text>;
+  };
+
+  const handleLogoSelect = (logo: LogoSample) => {
+    qrcodeState$.customLogoUri.set('');
+    qrcodeState$.selectedLogo.set({ type: logo.type, value: logo.value ?? '' });
+  };
+
+  const handleCustomImageUpload = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]?.uri) {
+        qrcodeState$.customLogoUri.set(result.assets[0].uri);
+        qrcodeState$.selectedLogo.set({ type: 'custom', value: '' });
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  const isSelected = (logo: LogoSample) => {
+    if (customLogoUri && logo.id === 'none') return false;
+    const currentLogo = selectedLogo as SelectedLogo;
+    if (currentLogo.type === logo.type && currentLogo.value === logo.value) {
+      if (logo.type === 'none' && currentLogo.value === '') return true;
+      return true;
+    }
+    return false;
+  };
 
   return (
     <HoverDropdown
       label="Logo"
       trigger={
-        <Text style={styles.triggerEmoji}>{selectedLogo || '—'}</Text>
+        <View style={styles.triggerContainer}>
+          {currentDisplay()}
+        </View>
       }
     >
-      {LogoEmojis.map((emoji, index) => (
+      {LogoSamples.map((logo) => (
         <LogoOption
-          key={index}
-          emoji={emoji}
-          isSelected={selectedLogo === emoji}
-          onSelect={() => qrcodeState$.selectedLogo.set(emoji)}
+          key={logo.id}
+          logo={logo}
+          isSelected={isSelected(logo)}
+          onSelect={() => handleLogoSelect(logo)}
         />
       ))}
+      <View style={styles.divider} />
+      <Pressable
+        onPress={handleCustomImageUpload}
+        onHoverIn={() => setIsUploadHovered(true)}
+        onHoverOut={() => setIsUploadHovered(false)}
+        style={[styles.option, isUploadHovered && styles.optionHovered]}
+      >
+        <Text style={styles.uploadIcon}>📁</Text>
+        <Text style={styles.optionText}>Upload image</Text>
+      </Pressable>
     </HoverDropdown>
   );
 };
 
 type LogoOptionProps = {
-  emoji: string;
+  logo: LogoSample;
   isSelected: boolean;
   onSelect: () => void;
 };
 
-const LogoOption = ({ emoji, isSelected, onSelect }: LogoOptionProps) => {
+const LogoOption = ({ logo, isSelected, onSelect }: LogoOptionProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const closeDropdown = useDropdownClose();
 
@@ -61,23 +131,42 @@ const LogoOption = ({ emoji, isSelected, onSelect }: LogoOptionProps) => {
         (isHovered || isSelected) && styles.optionHovered,
       ]}
     >
-      <Text style={styles.optionEmoji}>{emoji || '—'}</Text>
+      <View style={styles.logoPreview}>
+        {logo.type === 'emoji' && (
+          <Text style={styles.optionEmoji}>{logo.value || '—'}</Text>
+        )}
+        {logo.type === 'image' && logo.value && (
+          <LogoImage logoId={logo.value} size={20} />
+        )}
+        {logo.type === 'none' && (
+          <Text style={styles.optionEmoji}>—</Text>
+        )}
+      </View>
       <Text
         style={[
           styles.optionText,
           (isHovered || isSelected) && styles.optionTextHovered,
         ]}
       >
-        {LogoLabels[emoji] || 'logo'}
+        {logo.label}
       </Text>
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
+  triggerContainer: {
+    minWidth: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   triggerEmoji: {
     fontSize: 16,
     color: Colors.textPrimary,
+  },
+  customLogoPreview: {
+    width: 24,
+    height: 24,
   },
   option: {
     flexDirection: 'row',
@@ -89,10 +178,14 @@ const styles = StyleSheet.create({
   optionHovered: {
     backgroundColor: Colors.hoverBackground,
   },
+  logoPreview: {
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   optionEmoji: {
     fontSize: 16,
-    width: 20,
-    textAlign: 'center',
     color: Colors.textPrimary,
   },
   optionText: {
@@ -102,5 +195,16 @@ const styles = StyleSheet.create({
   },
   optionTextHovered: {
     color: Colors.textPrimary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.hoverBackground,
+    marginVertical: Spacing.sm,
+    marginHorizontal: Spacing.lg,
+  },
+  uploadIcon: {
+    fontSize: 16,
+    width: 20,
+    textAlign: 'center',
   },
 });

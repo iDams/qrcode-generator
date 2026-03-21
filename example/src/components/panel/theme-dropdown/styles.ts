@@ -47,7 +47,6 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     bottom: '100%',
     left: 0,
-    marginBottom: Spacing.md,
     zIndex: 9999,
   },
   dropdownContent: {

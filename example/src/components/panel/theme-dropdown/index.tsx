@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -8,80 +8,83 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSelector } from '@legendapp/state/react';
 import { ChevronIcon } from '../../icons';
-import { Themes, type ThemeName } from '../../../constants';
+import { Themes, type ThemeName, type Theme } from '../../../constants';
 import { qrcodeState$ } from '../../../states';
 import { Colors } from '../../../design-tokens';
 import { TimingPresets } from '../../../animations';
 import { ThemeOption } from './theme-option';
 import { styles } from './styles';
 
+const formatThemeName = (name: ThemeName) => {
+  if (name === 'mono') return 'Black';
+  if (name === 'white') return 'White';
+  if (name === 'custom') return 'Custom';
+  return name;
+};
+
 export const ThemeDropdown = () => {
   const currentThemeName = useSelector(qrcodeState$.currentTheme);
+  const customColorsRaw = useSelector(qrcodeState$.customColors) as Array<
+    string | undefined
+  >;
+  const customColors: string[] = customColorsRaw.filter(
+    (color): color is string => typeof color === 'string'
+  );
   const [isHovered, setIsHovered] = useState(false);
-  const [isDropdownHovered, setIsDropdownHovered] = useState(false);
   const [isTapOpen, setIsTapOpen] = useState(false);
   const animation = useSharedValue(0);
-  const closeTimeout = useRef<NodeJS.Timeout | null>(null);
+  const normalizedCustomColors: string[] =
+    customColors.length >= 2 ? customColors : ['#FFFFFF', '#BC002D'];
 
-  const currentTheme = useMemo(() => {
+  const currentTheme = useMemo<Theme | { colors: string[] }>(() => {
+    if (currentThemeName === 'custom') {
+      return { colors: normalizedCustomColors };
+    }
     return Themes[currentThemeName];
-  }, [currentThemeName]);
-
-  const isOpen = isHovered || isDropdownHovered || isTapOpen;
+  }, [currentThemeName, normalizedCustomColors]);
 
   const openDropdown = () => {
-    if (closeTimeout.current) {
-      clearTimeout(closeTimeout.current);
-      closeTimeout.current = null;
-    }
     animation.value = withTiming(1, TimingPresets.dropdown);
   };
 
   const closeDropdown = () => {
-    closeTimeout.current = setTimeout(() => {
-      animation.value = withTiming(0, TimingPresets.dropdownClose);
-    }, 30);
-  };
-
-  const handleButtonHoverIn = () => {
-    setIsHovered(true);
-    openDropdown();
-  };
-
-  const handleButtonHoverOut = () => {
-    setIsHovered(false);
-    if (!isDropdownHovered && !isTapOpen) {
-      closeDropdown();
-    }
-  };
-
-  const handleDropdownHoverIn = () => {
-    setIsDropdownHovered(true);
-    openDropdown();
-  };
-
-  const handleDropdownHoverOut = () => {
-    setIsDropdownHovered(false);
-    if (!isHovered && !isTapOpen) {
-      closeDropdown();
-    }
+    animation.value = withTiming(0, TimingPresets.dropdownClose);
   };
 
   const handlePress = () => {
     if (isTapOpen) {
       setIsTapOpen(false);
       closeDropdown();
-    } else {
-      setIsTapOpen(true);
-      openDropdown();
+      return;
     }
+
+    setIsTapOpen(true);
+    openDropdown();
   };
 
   const handleBackdropPress = () => {
     setIsTapOpen(false);
-    setIsHovered(false);
-    setIsDropdownHovered(false);
-    animation.value = withTiming(0, TimingPresets.dropdownClose);
+    closeDropdown();
+  };
+
+  const handleThemeSelect = (themeName: ThemeName) => {
+    qrcodeState$.currentTheme.set(themeName);
+
+    if (themeName === 'mono') {
+      qrcodeState$.pageTheme.set('light');
+    } else if (themeName === 'white') {
+      qrcodeState$.pageTheme.set('dark');
+    }
+
+    if (themeName === 'custom') {
+      qrcodeState$.isCustomColorModalVisible.set(true);
+      setIsTapOpen(false);
+      closeDropdown();
+      return;
+    }
+
+    setIsTapOpen(false);
+    closeDropdown();
   };
 
   const dropdownStyle = useAnimatedStyle(() => ({
@@ -103,29 +106,24 @@ export const ThemeDropdown = () => {
         <Pressable style={styles.backdrop} onPress={handleBackdropPress} />
       )}
 
-      <Animated.View
-        style={[styles.dropdown, dropdownStyle]}
-        onPointerEnter={handleDropdownHoverIn}
-        onPointerLeave={handleDropdownHoverOut}
-      >
+      <Animated.View style={[styles.dropdown, dropdownStyle]}>
         <View style={styles.dropdownContent}>
           {(Object.keys(Themes) as ThemeName[]).map((themeName) => {
-            const theme = Themes[themeName];
+            const theme =
+              themeName === 'custom'
+                ? { colors: normalizedCustomColors }
+                : Themes[themeName];
             const isSelected = themeName === currentThemeName;
+
             return (
-              <ThemeOption
-                key={themeName}
-                name={themeName}
-                theme={theme}
-                isSelected={isSelected}
-                onPress={() => {
-                  qrcodeState$.currentTheme.set(themeName);
-                  setIsTapOpen(false);
-                  setIsDropdownHovered(false);
-                  setIsHovered(false);
-                  animation.value = withTiming(0, TimingPresets.dropdownClose);
-                }}
-              />
+              <React.Fragment key={themeName}>
+                <ThemeOption
+                  name={formatThemeName(themeName)}
+                  theme={theme as Theme}
+                  isSelected={isSelected}
+                  onPress={() => handleThemeSelect(themeName)}
+                />
+              </React.Fragment>
             );
           })}
         </View>
@@ -133,21 +131,21 @@ export const ThemeDropdown = () => {
 
       <Pressable
         onPress={handlePress}
-        onHoverIn={handleButtonHoverIn}
-        onHoverOut={handleButtonHoverOut}
-        style={[styles.button, isOpen && styles.buttonHovered]}
+        onHoverIn={() => setIsHovered(true)}
+        onHoverOut={() => setIsHovered(false)}
+        style={[styles.button, (isHovered || isTapOpen) && styles.buttonHovered]}
       >
         <LinearGradient
-          colors={[currentTheme.colors[0], currentTheme.colors[1]]}
+          colors={currentTheme.colors as [string, string, ...string[]]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.selectedCircle}
         />
-        <Text style={[styles.buttonText, isOpen && styles.buttonTextHovered]}>
+        <Text style={[styles.buttonText, (isHovered || isTapOpen) && styles.buttonTextHovered]}>
           Colors
         </Text>
         <Animated.View style={chevronStyle}>
-          <ChevronIcon color={isOpen ? Colors.iconHovered : Colors.iconMuted} />
+          <ChevronIcon color={isTapOpen ? Colors.iconHovered : Colors.iconMuted} />
         </Animated.View>
       </Pressable>
     </View>

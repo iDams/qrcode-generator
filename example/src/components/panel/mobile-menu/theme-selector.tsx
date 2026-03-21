@@ -15,7 +15,11 @@ import { Themes, type ThemeName } from '../../../constants';
 import { styles } from './styles';
 
 const formatThemeName = (name: string) =>
-  name.charAt(0).toUpperCase() + name.slice(1);
+  name === 'mono'
+    ? 'Black'
+    : name === 'white'
+      ? 'White'
+      : name.charAt(0).toUpperCase() + name.slice(1);
 
 const AnimatedPressableScale = Animated.createAnimatedComponent(PressableScale);
 
@@ -45,7 +49,7 @@ const ColorOption = ({ themeName, isSelected, onPress }: ColorOptionProps) => {
       style={[styles.colorOption, animatedStyle]}
     >
       <LinearGradient
-        colors={[theme.colors[0], theme.colors[1]]}
+        colors={theme.colors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.colorCircle}
@@ -60,6 +64,11 @@ export const ThemeSelector = () => {
   const handleSelect = useCallback((themeName: ThemeName) => {
     if (themeName === qrcodeState$.currentTheme.peek()) return;
     qrcodeState$.currentTheme.set(themeName);
+    if (themeName === 'mono') {
+      qrcodeState$.pageTheme.set('light');
+    } else if (themeName === 'white') {
+      qrcodeState$.pageTheme.set('dark');
+    }
     Burnt.toast({
       title: `Theme: ${formatThemeName(themeName)}`,
       preset: 'none',
