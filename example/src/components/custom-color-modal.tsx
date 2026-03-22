@@ -111,11 +111,16 @@ export const CustomColorModal = () => {
     ],
   }));
 
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: animation.value,
+  }));
+
   return (
     <View
-      style={[styles.container, { backgroundColor: theme.backdrop }]}
+      style={styles.container}
       pointerEvents={visible ? 'box-none' : 'none'}
     >
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: theme.backdrop }, backdropStyle]} />
       <GestureDetector gesture={panGesture}>
         <Animated.View
           style={[
