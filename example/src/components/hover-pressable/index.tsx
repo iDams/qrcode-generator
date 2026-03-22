@@ -9,6 +9,7 @@ type HoverPressableProps = {
   pressedStyle?: StyleProp<ViewStyle>;
   onPress?: () => void;
   disabled?: boolean;
+  [key: string]: any; // Allow other standard Pressable props like href, accessibilityRole, target
 };
 
 export const HoverPressable = ({
@@ -16,8 +17,7 @@ export const HoverPressable = ({
   style,
   hoverStyle,
   pressedStyle,
-  onPress,
-  disabled,
+  ...rest
 }: HoverPressableProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -32,12 +32,24 @@ export const HoverPressable = ({
         isHovered && hoverStyle,
         isPressed && activePressedStyle,
       ]}
-      onPress={onPress}
-      onHoverIn={() => setIsHovered(true)}
-      onHoverOut={() => setIsHovered(false)}
-      onPressIn={() => setIsPressed(true)}
-      onPressOut={() => setIsPressed(false)}
-      disabled={disabled}
+      onPress={rest.onPress}
+      onHoverIn={(e: any) => {
+        setIsHovered(true);
+        rest.onHoverIn?.(e);
+      }}
+      onHoverOut={(e: any) => {
+        setIsHovered(false);
+        rest.onHoverOut?.(e);
+      }}
+      onPressIn={(e) => {
+        setIsPressed(true);
+        rest.onPressIn?.(e);
+      }}
+      onPressOut={(e) => {
+        setIsPressed(false);
+        rest.onPressOut?.(e);
+      }}
+      {...rest}
     >
       {typeof children === 'function'
         ? children({ isHovered, isPressed })

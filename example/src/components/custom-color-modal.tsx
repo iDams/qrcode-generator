@@ -117,8 +117,7 @@ export const CustomColorModal = () => {
 
   return (
     <View
-      style={styles.container}
-      pointerEvents={visible ? 'box-none' : 'none'}
+      style={[styles.container, { pointerEvents: visible ? 'box-none' : 'none' } as any]}
     >
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: theme.backdrop }, backdropStyle]} />
       <GestureDetector gesture={panGesture}>
@@ -129,10 +128,10 @@ export const CustomColorModal = () => {
               backgroundColor: theme.modalBackground,
               borderColor: theme.modalBorder,
               shadowColor: theme.shadowColor,
-            },
+              pointerEvents: visible ? 'auto' : 'none',
+            } as any,
             animatedStyle,
           ]}
-          pointerEvents={visible ? 'auto' : 'none'}
         >
           <View
             style={[
@@ -212,10 +211,15 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl + 4,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.48,
-    shadowRadius: 36,
+    ...Platform.select({
+      web: { boxShadow: '0px 18px 36px rgba(0,0,0,0.48)' },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 18 },
+        shadowOpacity: 0.48,
+        shadowRadius: 36,
+      },
+    }),
     overflow: 'hidden',
   },
   header: {

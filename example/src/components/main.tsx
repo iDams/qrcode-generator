@@ -101,6 +101,9 @@ export default function App() {
       <View style={styles.topLeft}>
         <HoverPressable
           onPress={handleBrandPress}
+          href="https://imarcodev.com"
+          hrefAttrs={{ target: '_blank', rel: 'noopener noreferrer' }}
+          accessibilityRole="link"
           style={styles.brandMark}
           hoverStyle={styles.brandMarkHovered}
           pressedStyle={styles.brandMarkPressed}
@@ -111,6 +114,7 @@ export default function App() {
                 styles.brandSymbol,
                 { color: isDark ? '#D4AF37' : '#9A7A1E' },
               ]}
+              accessible={false}
             >
               マルコ
             </Text>
@@ -119,6 +123,8 @@ export default function App() {
                 styles.brandName,
                 { color: isDark ? Colors.textPrimary : '#111111' },
               ]}
+              accessibilityRole="header"
+              aria-level={1}
             >
               Marco.
             </Text>

@@ -24,8 +24,14 @@ export default function Root({ children }: { children: React.ReactNode }) {
         {/* SEO */}
         <meta name="description" content={DESCRIPTION} />
         <meta name="author" content="Marco" />
-        <meta name="keywords" content="QR code, generator, react native, skia, custom, gradient, svg, png" />
+        <meta name="keywords" content="QR code, free generator, react native, skia, custom, gradient, svg, png, imarcodev" />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <meta name="theme-color" content="#000000" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="canonical" href={SITE_URL} />
+        <link rel="manifest" href="/manifest.json" />
         
         {/* Favicon */}
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -40,12 +46,17 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta property="og:image" content={`${SITE_URL}/og-image.png`} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="Preview of the Skia QR Code Generator by Marco" />
+        <meta property="og:site_name" content="IMarcoDev" />
+        <meta property="og:locale" content="en_US" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={SITE_URL} />
         <meta name="twitter:title" content={TITLE} />
         <meta name="twitter:description" content={DESCRIPTION} />
         <meta name="twitter:image" content={`${SITE_URL}/og-image.png`} />
+        <meta name="twitter:image:alt" content="Preview of the Skia QR Code Generator by Marco" />
 
         {/*
           Disable body scrolling on web. This makes ScrollView components work closer to how they do on native.

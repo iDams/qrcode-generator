@@ -5,6 +5,7 @@ import {
   TextInput,
   Pressable,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -101,9 +102,9 @@ export const URLInputModal = ({ visible, onClose }: URLInputModalProps) => {
     ],
   }));
 
-  if (!visible && animation.get() === 0) {
-    return null;
-  }
+
+
+
 
   const backdropPaddingTop = isMobileSize ? safeTop + 12 : 140;
 
@@ -151,10 +152,15 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderModal,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.5,
-    shadowRadius: 32,
+    ...Platform.select({
+      web: { boxShadow: '0px 16px 32px rgba(0,0,0,0.5)' },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 16 },
+        shadowOpacity: 0.5,
+        shadowRadius: 32,
+      },
+    }),
   },
   iconContainer: {
     width: 44,
